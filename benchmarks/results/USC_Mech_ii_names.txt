@@ -1,0 +1,8 @@
+
+=== USC_Mech_ii  mode=names  seeds=0  (62.5 s)
+species scored: 110   correct: 106   wrong: 2   unresolved: 2   truth in top-3: 110
+accuracy (correct / scored): 96.4%   precision (correct / identified): 98.1%
+  WRONG H2C4O          C4H2O     got=C#COC#C                  truth=C=C=C=C=O              conf=0.63 rank=2 n=85 reactions (3 witnesses)
+  WRONG C6H3           C6H3      got=C#C[C]=CC#C              truth=[CH]=CC#CC#C           conf=0.90 rank=1 n=151 reactions (5 witnesses)
+  open  OC6H4CH3       C7H7O     got=None                     truth=Cc1ccccc1[O]           conf=0.00 rank=2 n=132 
+  open  HOC6H4CH3      C7H8O     got=None                     truth=Cc1ccccc1O             conf=0.00 rank=1 n=100 

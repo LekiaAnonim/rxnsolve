@@ -1,0 +1,10 @@
+
+=== USC_Mech_ii  mode=blind  seeds=0  (105.3 s)
+species scored: 110   correct: 104   wrong: 4   unresolved: 2   truth in top-3: 110
+accuracy (correct / scored): 94.5%   precision (correct / identified): 96.3%
+  WRONG aC3H4          C3H4      got=[CH]C=C                  truth=C=C=C                  conf=0.94 rank=1 n=8 reactions (23 witnesses)
+  WRONG CH3CHOCH2      C3H6O     got=C=COC                    truth=CC1CO1                 conf=0.97 rank=1 n=23 reactions (6 witnesses)
+  WRONG H2C4O          C4H2O     got=C#COC#C                  truth=C=C=C=C=O              conf=0.63 rank=2 n=85 reactions (3 witnesses)
+  WRONG C6H3           C6H3      got=C#C[C]=CC#C              truth=[CH]=CC#CC#C           conf=0.90 rank=1 n=151 reactions (5 witnesses)
+  open  OC6H4CH3       C7H7O     got=None                     truth=Cc1ccccc1[O]           conf=0.00 rank=2 n=133 
+  open  HOC6H4CH3      C7H8O     got=None                     truth=Cc1ccccc1O             conf=0.00 rank=1 n=100 

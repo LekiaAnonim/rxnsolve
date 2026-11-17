@@ -1,0 +1,10 @@
+
+=== AramcoMech_1.3  mode=blind  seeds=0  (60.8 s)
+species scored: 251   correct: 245   wrong: 3   unresolved: 3   truth in top-3: 249
+accuracy (correct / scored): 97.6%   precision (correct / identified): 98.8%
+  WRONG C4H8OH-2O2     C4H9O3    got=CC(C(C)O)O[O]            truth=CCC(C)(O)O[O]          conf=0.98 rank=5 n=86 reactions (2 witnesses)
+  open  SC3H5CHO       C4H6O     got=None                     truth=CC=CC=O                conf=0.00 rank=0 n=131 
+  WRONG CC4H8O         C4H8O     got=CC1COC1                  truth=CC1CCO1                conf=0.83 rank=21 n=72 reactions (7 witnesses)
+  open  CH3CHCHCO      C4H5O     got=None                     truth=CC=C[C]=O              conf=0.00 rank=1 n=143 
+  WRONG C4H5-2         C4H5      got=C=C=[C]C                 truth=C=[C]C=C               conf=0.94 rank=2 n=34 chemical plausibility
+  open  H2C4O          C4H2O     got=None                     truth=C=C=C=C=O              conf=0.00 rank=2 n=103 

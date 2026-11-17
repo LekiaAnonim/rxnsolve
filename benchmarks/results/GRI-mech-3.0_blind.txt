@@ -1,0 +1,4 @@
+
+=== GRI-mech-3.0  mode=blind  seeds=0  (4.7 s)
+species scored: 59   correct: 59   wrong: 0   unresolved: 0   truth in top-3: 59
+accuracy (correct / scored): 100.0%   precision (correct / identified): 100.0%
