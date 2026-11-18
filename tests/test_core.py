@@ -204,5 +204,55 @@ class TestAudit(unittest.TestCase):
         self.assertEqual(ident.audit_partial, [])
 
 
+class TestSpin(unittest.TestCase):
+    def test_ground_state_table_uses_hill_keys(self):
+        from rxnsolve.elements import hill_formula
+        from rxnsolve.identify import GROUND_STATE_MULTIPLICITY
+        from rxnsolve.cli import _formula
+        for key in GROUND_STATE_MULTIPLICITY:
+            self.assertEqual(hill_formula(_formula(key)), key)
+        self.assertEqual(GROUND_STATE_MULTIPLICITY["HN"], 3)   # NH
+        self.assertEqual(GROUND_STATE_MULTIPLICITY["OS"], 3)   # SO
+        self.assertEqual(GROUND_STATE_MULTIPLICITY["N"], 4)
+
+    def test_spin_prefix_only_when_needed(self):
+        cases = {"singlet[O]": "singlet[O]", "[O]": "[O]", "singlet[CH2]": "singlet[CH2]",
+                 "triplet[CH2]": "[CH2]", "[O][O]": "[O][O]", "singlet[O][O]": "O=O",
+                 "[N]": "[N]", "[CH3]": "[CH3]"}
+        for given, written in cases.items():
+            m = S(given)
+            self.assertEqual(canonical_smiles(m), written, given)
+            self.assertEqual(S(written).multiplicity, m.multiplicity, given)
+
+    def test_spin_conservation(self):
+        def allowed(lhs, rhs):
+            return solve_reaction([S(x) for x in lhs], [S(x) for x in rhs]).spin_allowed
+        self.assertFalse(allowed(["triplet[CH2]", "[H][H]"], ["C"]))
+        self.assertTrue(allowed(["singlet[CH2]", "[H][H]"], ["C"]))
+        self.assertTrue(allowed(["[O][O]", "[H]"], ["[O]O"]))
+        self.assertTrue(allowed(["[CH3]", "[CH3]"], ["CC"]))
+        self.assertFalse(allowed(["singlet[CH2]", "N#N"], ["triplet[CH2]", "N#N"]))
+
+    def test_spin_labels_switch(self):
+        comps = {"CH2": [("C", 1), ("H", 2)], "CH2(S)": [("C", 1), ("H", 2)],
+                 "NH": [("N", 1), ("H", 1)]}
+        mech_txt = ("ELEMENTS C H N END\nSPECIES CH2 CH2(S) NH END\nTHERMO ALL\n"
+                    "300.000  1000.000  5000.000\n" + "".join(_card(n, c) for n, c in comps.items())
+                    + "END\nREACTIONS\nEND\n")
+        with tempfile.NamedTemporaryFile("w", suffix=".inp", delete=False) as fh:
+            fh.write(mech_txt)
+            path = fh.name
+        try:
+            mech = parse_chemkin(path)
+            on = Identifier(mech, {}, use_names=False, thermo=None).run()
+            off = Identifier(mech, {}, use_names=False, thermo=None, use_spin_labels=False).run()
+        finally:
+            os.unlink(path)
+        self.assertEqual(on.species["CH2(S)"].chosen.smiles, "singlet[CH2]")
+        self.assertEqual(on.species["CH2"].chosen.smiles, "[CH2]")
+        self.assertEqual(on.species["NH"].chosen.mol.multiplicity, 3)   # Hund's rule table
+        self.assertEqual(off.species["CH2(S)"].chosen.smiles, "[CH2]")  # label ignored
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -41,13 +41,16 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("model")
     ap.add_argument("--mode", choices=["names", "blind"], default="names",
-                    help="names: use species names; blind: ignore names entirely")
+                    help="names: use species names as structure hints; blind: do not "
+                         "(spin labels are still read unless --no-spin-labels)")
     ap.add_argument("--seed", type=int, default=0,
                     help="number of species to give as known (random, reproducible)")
     ap.add_argument("--out", default=None, help="write JSON results here")
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--time-limit", type=float, default=1800)
     ap.add_argument("--no-thermo", action="store_true", help="ignore thermochemistry evidence")
+    ap.add_argument("--no-spin-labels", action="store_true",
+                    help="blind to spin labels in names too ((S), CH2*, SING, (1D))")
     args = ap.parse_args(argv)
 
     chem, thermo, smiles = find_inputs(args.model)
@@ -69,6 +72,7 @@ def main(argv=None):
     ident = Identifier(mech, known, use_names=(args.mode == "names"), verbose=args.verbose,
                        time_limit=args.time_limit,
                        thermo=None if args.no_thermo else "auto",
+                       use_spin_labels=not args.no_spin_labels,
                        exclude_models={args.model})
     ident.run()
     dt = time.time() - t0

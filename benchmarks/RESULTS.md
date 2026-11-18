@@ -2,8 +2,10 @@
 
 Answer key: the `SMILES.txt` written by the RMG importer for each model in
 `RMG-models`. The model under test is excluded from the thermo library.
-*names* = species names used as soft hints. *blind* = names ignored; only the
-formula, thermochemistry and reactions are used. No species are given as known.
+*names* = species names used as soft hints. *blind* = names not used as structure
+hints; only the formula, thermochemistry and reactions are used (spin labels such
+as `(S)` are still read; scoring compares connectivity, so they don't change the
+counts). No species are given as known.
 
 | Mechanism | Species | Mode | Correct | Wrong | Left open | Precision | Truth in top 3 | Time |
 |---|---|---|---|---|---|---|---|---|

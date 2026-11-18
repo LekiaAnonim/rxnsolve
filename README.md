@@ -23,6 +23,31 @@ Pure Python 3.9+, standard library only. No RDKit, no RMG, no cluster.
 | Identification | `identify.py` | iterative constraint propagation over the whole mechanism; audit of existing `SMILES.txt` |
 | Drawing / report | `draw.py`, `report.py` | SVG Lewis structures (lone-pair and radical dots, charges) and atom-mapped mechanisms with curly arrows, in one HTML file |
 
+## Electron spin (singlet, doublet, triplet, ...)
+
+Identity is the connectivity, so CH₂ and CH₂(S) share one structure. Spin is a
+separate label, the multiplicity 2S+1, set in this order:
+
+1. the `--known` SMILES. An explicit prefix (`singlet[CH2]`, `triplet[O]`) always
+   wins. A bare bracket SMILES follows RMG's convention, where every unfilled
+   valence is a radical (`[CH2]` is a triplet). For the ground-state species in
+   item 3 the table overrides it instead, so `[C]` is read as triplet carbon
+   rather than a quintet, and `[CH]` as a doublet rather than a quartet.
+2. spin labels in the name: `(S)`, `CH2S`, `S-CH2`, `CH2*`, `SING`, `(1D)` → singlet;
+   `(T)`, `TRIP` → triplet. `--no-spin-labels` turns this off.
+3. Hund's-rule ground states where Lewis theory pairs electrons wrongly: O₂, CH₂, O,
+   C, S, Si, NH, S₂, SO, NCN, CCO are triplets; N is a quartet; CH is a doublet
+4. otherwise the Lewis solver pairs every electron it can: an odd electron count
+   gives a doublet, an even count gives a singlet
+
+The multiplicity is the target number of unpaired electrons for the Lewis solver.
+It spreads radicals over atoms before it splits a lone pair, so triplet O₂ is
+·O–O· and singlet CH₂ keeps a lone pair. Output SMILES carry a prefix
+(`singlet[CH2]`, `singlet[O]`) whenever RMG's bracket convention would otherwise
+imply a different spin. The reaction solver checks spin conservation (Wigner's
+rule: some total spin must be reachable from both sides) and marks steps such
+as `triplet CH2 + H2 -> CH4` as spin-forbidden.
+
 ## How a species is identified
 
 For a species *S* and candidate structure *c*:
@@ -54,7 +79,10 @@ Species that pass the confidence threshold (0.90, relaxed to 0.5 if stuck) are f
 
 Each `RMG-models/*/SMILES.txt` (from `importChemkin.py`) is hidden and used as
 the answer key. The mechanism under test is excluded from the thermo library.
-*blind* = species names ignored entirely (formula + thermo + reactions only).
+*blind* = species names are not used as structure hints (formula + thermo +
+reactions only). Spin labels such as `(S)` are still read unless
+`--no-spin-labels` is given. They don't affect the scores, which compare
+connectivity.
 
 Run `python benchmarks/benchmark.py <model> --mode names|blind`. Current numbers are
 in `benchmarks/RESULTS.md`.
@@ -69,7 +97,9 @@ python -m rxnsolve identify chem.inp -t therm.dat -k SMILES.txt -o out/
 # check an existing identification (e.g. an RMG-models SMILES.txt)
 python -m rxnsolve audit chem.inp -t therm.dat -k SMILES.txt -o audit/
 #   each given structure is re-scored against alternatives with every other
-#   species held fixed; flagged when an alternative is > e^3 (20x) more likely
+#   species held fixed; flagged when an alternative is > e^3 (20x) more likely.
+#   Then the species the SMILES file does not cover are identified, seeded by
+#   the given ones (--audit-only skips that step).
 
 # solve one reaction: bonds broken/formed, atoms moved, arrows, class
 python -m rxnsolve solve "CCO[O] >> C=C + [O]O" --svg ho2_elim.svg
@@ -114,3 +144,9 @@ python3 -m unittest discover -s tests -v
 * `audit` checks each species on at most 24 witness reactions (elementary and
   small first) and 40 alternatives, within 20 s. Species that run out of time
   are listed as partly checked. It takes about 1 minute for a 110-species model.
+* Identification gives each open species 30 s per round. Bond-edit distances
+  are cached, so the next round continues where the last one stopped. A species
+  that was cut off is only decided once at least 10 of its reactions have been
+  scored.
+* Output prefixes `doublet`/`quartet` (e.g. `doublet[CH]`) are understood by
+  rxnsolve. RMG's importer may only read `singlet`/`triplet`.

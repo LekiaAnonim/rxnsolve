@@ -160,6 +160,9 @@ def parse_smiles(text: str) -> Molecule:
     if mult is None:
         mult = total_radicals + 1
     mol.multiplicity = mult
+    # True only when the text said singlet/triplet/...; otherwise the spin is
+    # RMG's bracket convention (every unfilled valence counted as a radical)
+    mol.spin_explicit = m is not None
     mol.label = text.strip()
     return mol
 
@@ -273,8 +276,16 @@ def to_smiles(mol: Molecule, structure=None) -> str:
     return ".".join(parts)
 
 
+SPIN_PREFIX = {1: "singlet", 2: "doublet", 3: "triplet", 4: "quartet", 5: "quintet"}
+
+
 def canonical_smiles(mol: Molecule) -> str:
-    """Deterministic SMILES: smallest string over the optimal resonance forms."""
+    """Deterministic SMILES: smallest string over the optimal resonance forms.
+
+    RMG reads bracket atoms as radicals ([CH2] is a triplet, [O] a triplet
+    atom).  When the molecule's spin differs from what the string implies, a
+    prefix is added: singlet[CH2], singlet[O].
+    """
     from .lewis import solve_lewis
 
     structs = solve_lewis(mol, unpaired=_target_unpaired(mol))
@@ -282,7 +293,19 @@ def canonical_smiles(mol: Molecule) -> str:
         structs = solve_lewis(mol)
     if not structs:
         return mol.formula_string()
-    return min(to_smiles(mol, s) for s in structs[:12])
+    # prefer the resonance form with the most benzene-like rings (benzyl as
+    # [CH2]-phenyl, not a ring radical), then the shortest/smallest string
+    from .isomers import aromatic_rings
+    smi, s = min(((to_smiles(mol, x), x) for x in structs[:12]),
+                 key=lambda t: (-aromatic_rings(mol, t[1]), len(t[0]), t[0]))
+    target = mol.multiplicity or (s.unpaired + 1)
+    try:
+        implied = parse_smiles(smi).multiplicity
+    except SmilesError:
+        implied = target
+    if implied != target and target in SPIN_PREFIX:
+        smi = SPIN_PREFIX[target] + smi
+    return smi
 
 
 def _target_unpaired(mol: Molecule):

@@ -45,6 +45,9 @@ LUMPED_WEIGHT = 0.25     # weight of a reaction with 3+ species on one side
 GEN_PER_REACTION = 60    # reaction-built structures kept per witness reaction
 BIG_SIDE_HEAVY = 14      # above this many heavy atoms on a side, search 2 deletions per side, not 3
 
+IDENTIFY_SECONDS = 30.0  # per open species per round
+PARTIAL_MIN_REACTIONS = 10  # a species cut off by the budget needs this many scored reactions
+
 # audit limits (per given species)
 AUDIT_REACTIONS = 24     # witness reactions scored, elementary and small first
 AUDIT_GEN_REACTIONS = 6  # of those, reactions used to build alternatives
@@ -53,10 +56,24 @@ AUDIT_SECONDS = 20.0     # time budget; scoring stops after the current reaction
 
 # Ground-state spin where Lewis theory (which pairs every electron it can)
 # gets it wrong: Hund's rule for atoms and the classic triplet molecules.
-GROUND_STATE_MULTIPLICITY = {
-    "O2": 3, "CH2": 3, "O": 3, "C": 3, "S": 3, "NH": 3, "N": 4, "S2": 3, "SO": 3,
-    "CH": 2, "Si": 3, "CN": 2, "C2O": 3, "HCCH": 1, "NCN": 3, "CCO": 3,
+# Written as everyday formulas; keys are converted to the Hill order the
+# lookup uses (NH -> HN, SO -> OS, NCN -> CN2, CCO -> C2O).  Doublets need no
+# entry: an odd electron count always gives one unpaired electron.
+_GROUND_STATE = {
+    "O2": 3, "CH2": 3, "O": 3, "C": 3, "S": 3, "Si": 3, "NH": 3, "N": 4,
+    "S2": 3, "SO": 3, "NCN": 3, "CCO": 3,
+    "CH": 2,   # bracket SMILES [CH] would otherwise imply a quartet
 }
+
+
+def _hill_key(text: str) -> str:
+    counts = Counter()
+    for el, n in re.findall(r"([A-Z][a-z]?)(\d*)", text):
+        counts[el] += int(n) if n else 1
+    return hill_formula(counts)
+
+
+GROUND_STATE_MULTIPLICITY = {_hill_key(k): v for k, v in _GROUND_STATE.items()}
 
 
 @dataclass
@@ -96,6 +113,7 @@ class SpeciesState:
     candidates: dict = field(default_factory=dict)
     notes: list = field(default_factory=list)
     default_multiplicity: int | None = None
+    audited: bool = False               # given structure re-scored by audit()
     truth: str | None = None            # for benchmarking
 
     @property
@@ -123,8 +141,12 @@ class Identifier:
     def __init__(self, mech: Mechanism, known: dict[str, str] | None = None,
                  use_names: bool = True, threshold: float = 0.9, verbose: bool = False,
                  max_rounds: int = 40, time_limit: float = 1800.0, thermo="auto",
-                 exclude_models: set[str] | None = None):
+                 exclude_models: set[str] | None = None, use_spin_labels: bool = True):
         self.mech = mech
+        # spin labels in names ((S), CH2*, SING, (1D), (T)) are spin annotations,
+        # not structure hints; they are read even when use_names is False
+        # unless this is switched off
+        self.use_spin_labels = use_spin_labels
         if thermo == "auto":
             from .thermo import default_model
             thermo = default_model(exclude_models)
@@ -166,7 +188,7 @@ class Identifier:
             if f is not None and "E" in f:
                 f = None
             st = SpeciesState(name, Counter(f) if f else None)
-            st.multiplicity = spin_from_name(name, st.formula)
+            st.multiplicity = self._name_spin(name)
             st.default_multiplicity = GROUND_STATE_MULTIPLICITY.get(hill_formula(f)) if f else None
             self.species[name] = st
         self._infer_missing_formulas()
@@ -187,7 +209,13 @@ class Identifier:
             if st.formula is None:
                 st.formula = Counter(mol.formula())
             if st.multiplicity is None:
-                st.multiplicity = mol.multiplicity
+                # an explicit prefix wins; a bare bracket SMILES ([C], [CH])
+                # implies maximum spin, so the Hund's-rule table wins over it
+                if mol.spin_explicit or st.default_multiplicity is None:
+                    st.multiplicity = mol.multiplicity
+                else:
+                    st.multiplicity = st.default_multiplicity
+                mol.multiplicity = st.multiplicity
             c = self._make_candidate(st, mol, "user")
             st.candidates[c.key] = c
             st.chosen = c
@@ -229,6 +257,9 @@ class Identifier:
                     self.species[s].notes.append(f"formula {hill_formula(total)} inferred from reaction {r.index}")
                     changed = True
 
+    def _name_spin(self, name: str) -> int | None:
+        return spin_from_name(name, None) if self.use_spin_labels else None
+
     def _make_candidate(self, st: SpeciesState, mol: Molecule, source: str) -> Candidate:
         mol = mol.copy()
         mol.label = st.name
@@ -236,7 +267,9 @@ class Identifier:
             mol.multiplicity = st.multiplicity
         elif st.default_multiplicity is not None:  # Hund's-rule ground state
             mol.multiplicity = st.default_multiplicity
-        elif source not in ("user", "name"):
+        elif source == "user" or (source == "name" and mol.spin_explicit):
+            pass                                   # spin stated by the user / alias prefix
+        else:
             mol.multiplicity = None                # let Lewis theory pair electrons
         key = mol.constitution_key()
         try:
@@ -452,7 +485,8 @@ class Identifier:
     # ------------------------------------------------------------ main loop
     def run(self) -> "Identifier":
         t0 = time.time()
-        self.setup()
+        if not self.species:          # audit() may already have set things up
+            self.setup()
         self.generate_initial_candidates()
         thresholds = [self.threshold, 0.8, 0.65, 0.5]
         level = 0
@@ -466,9 +500,14 @@ class Identifier:
             proposals = []
             for st in open_species:
                 rxns = self.witness_reactions(st.name)
+                # per-species budget for this round; distances are cached on the
+                # candidates, so the next round continues where this one stopped
+                deadline = time.time() + IDENTIFY_SECONDS
                 if rxns:
-                    self.reaction_generated(st, rxns)
-                self.score_species(st, rxns)
+                    self.reaction_generated(st, rxns, deadline=deadline)
+                _, used = self.score_species(st, rxns, deadline=deadline)
+                if len(used) < min(len(rxns), PARTIAL_MIN_REACTIONS):
+                    continue      # too little evidence scored yet to decide this round
                 ranked = st.ranked()
                 if not ranked:
                     continue
@@ -483,9 +522,21 @@ class Identifier:
             claimed = self._taken(None)
             kept = []
             for p in sorted(accept, key=lambda p: (-p[0], -p[2])):
-                k = (p[4].key, p[3].multiplicity)
-                if k not in claimed:   # never hand one structure to two species
+                st_p, top_p = p[3], p[4]
+                k = (top_p.key, st_p.multiplicity)
+                if k not in claimed:   # never hand one structure to two species ...
                     claimed.add(k)
+                    kept.append(p)
+                elif len(st_p.candidates) == 1:
+                    # ... unless it is the only structure the formula allows:
+                    # then the two species differ only in electronic state
+                    # (CH2 / CH2(S), O / O(1D), OH / OH*) and spin must come
+                    # from a label or the user
+                    twin = next((s.name for s in self.species.values()
+                                 if s is not st_p and s.resolved and s.chosen is not None
+                                 and s.chosen.key == top_p.key), None)
+                    st_p.notes.append(f"same structure as {twin or 'another species'}: "
+                                      "differs only in electronic state (no spin label read)")
                     kept.append(p)
             accept = kept
             if not accept:
@@ -557,8 +608,9 @@ class Identifier:
             saved_mult = st.multiplicity
             # alternatives take their spin from the name or the ground-state
             # table, not from the given SMILES (which is what is being checked)
-            st.multiplicity = spin_from_name(st.name, st.formula)
+            st.multiplicity = self._name_spin(st.name)
             verdict = "ok"
+            kept, audit_p, scored_given = None, None, None
             try:
                 rxns_all = self._audit_reactions(st.name)
                 rxns = rxns_all[:AUDIT_REACTIONS]
@@ -575,7 +627,7 @@ class Identifier:
                 # the given structure is scored like any other candidate
                 st.multiplicity = saved_mult
                 g = self._make_candidate(st, given.mol, "formula")
-                st.multiplicity = spin_from_name(st.name, st.formula)
+                st.multiplicity = self._name_spin(st.name)
                 g.sources = {"given"}
                 st.candidates[g.key] = g
                 # a structure already given to another species is not offered as
@@ -586,6 +638,7 @@ class Identifier:
                 self._normalize_priors(st)
                 if len(st.candidates) == 1:
                     verdict = "only structure"
+                    audit_p = 1.0
                     continue
                 scored, used = self.score_species(
                     st, rxns, max_candidates=AUDIT_CANDIDATES + 1, deadline=deadline,
@@ -596,6 +649,10 @@ class Identifier:
                     verdict = f"partial ({len(used)}/{len(rxns)} reactions)"
                 best = max(scored, key=lambda c: c.score)
                 gap = best.score - g.score
+                audit_p, scored_given = g.posterior, g
+                kept = sorted(scored, key=lambda c: -c.posterior)[:6]
+                if g not in kept:
+                    kept.append(g)
                 if best.key != g.key and gap > min_gap:
                     rx = {r.index: r for r in self.mech.reactions}
                     diffs = [(rx[i].equation, g.distances.get(i), best.distances.get(i))
@@ -609,11 +666,23 @@ class Identifier:
                     })
                     verdict = f"FLAG: evidence prefers {best.smiles} (log-odds {gap:+.1f})"
             finally:
-                st.candidates = saved
-                st.candidates[given.key] = given
-                st.chosen = given
+                if kept is not None:
+                    # keep the scored comparison so the report can show it
+                    st.candidates = {c.key: c for c in kept}
+                    st.chosen = scored_given
+                else:
+                    st.candidates = saved
+                    st.candidates[given.key] = given
+                    st.chosen = given
+                    if audit_p is not None:
+                        given.posterior = audit_p
                 st.status = "known"
                 st.multiplicity = saved_mult
+                if audit_p is not None:
+                    st.audited = True
+                    st.confidence = audit_p
+                    st.method = ("given; audit flags it" if verdict.startswith("FLAG")
+                                 else f"given; audit P={audit_p:.2f}")
                 if verbose:
                     print(f"[audit {k}/{len(known)}] {st.name} {self.known.get(st.name, given.smiles)}: {verdict} "
                           f"({time.time() - t0:.1f} s)", flush=True)
@@ -637,21 +706,14 @@ class Identifier:
         lines = []
         for st in self.species.values():
             if st.resolved and st.chosen is not None:
-                smi = st.chosen.smiles
-                if st.multiplicity == 1 and st.chosen.mol.multiplicity == 1 and "[" in smi:
-                    from .lewis import best_structure
-                    if best_structure(st.chosen.mol).unpaired == 0 and _radical_in_low_spin(st.chosen.mol):
-                        smi = "singlet" + smi
-                lines.append(f"{st.name}\t{smi}")
+                # canonical_smiles already carries a spin prefix (singlet[O],
+                # singlet[CH2]) wherever RMG's bracket convention would mislead
+                lines.append(f"{st.name}\t{st.chosen.smiles}")
         return "\n".join(lines) + "\n"
 
     def summary(self) -> dict:
         counts = Counter(s.status for s in self.species.values())
         return dict(counts)
-
-
-def _radical_in_low_spin(mol):
-    return mol.heavy_count() == 1 and mol.formula().get("H", 0) == 2
 
 
 def identify(chem: str, thermo: str | None = None, known: str | None = None, **kw) -> Identifier:

@@ -86,6 +86,13 @@ def species_detail(ident, st) -> str:
     if st.notes:
         out.append("<ul>" + "".join(f"<li>{_e(n)}</li>" for n in st.notes) + "</ul>")
     ranked = st.ranked()[:8]
+    if st.status == "known" and not st.audited:
+        out.append("<p class='legend'>Given structure, not re-scored. Run "
+                   "<span class='mono'>python -m rxnsolve audit</span> to check it against the "
+                   "reactions and thermochemistry.</p>")
+    elif st.status == "known":
+        out.append("<p class='legend'>Audit: the given structure scored against alternatives with "
+                   "the rest of the mechanism held fixed.</p>")
     if ranked:
         out.append('<table class="cands"><tr><th>candidate</th><th>P</th><th>sources</th>'
                    '<th>prior</th><th>thermo</th><th>reactions</th><th>notes</th></tr>')
@@ -93,7 +100,11 @@ def species_detail(ident, st) -> str:
             notes = "; ".join(cand.reasons[:3])
             if cand.thermo_note:
                 notes = cand.thermo_note + ("; " + notes if notes else "")
-            out.append(f"<tr><td class='mono'>{_e(cand.smiles)}</td><td>{cand.posterior:.2f}</td>"
+            given = st.status == "known" and st.chosen is not None and cand.key == st.chosen.key
+            p_txt = ("given" if st.status == "known" and not st.audited
+                     else f"{cand.posterior:.2f}")
+            label = _e(cand.smiles) + (" <b>(given)</b>" if given and st.audited else "")
+            out.append(f"<tr><td class='mono'>{label}</td><td>{p_txt}</td>"
                        f"<td>{_e(', '.join(sorted(cand.sources)))}</td><td>{cand.log_prior + cand.log_name:+.1f}</td>"
                        f"<td>{cand.log_thermo:+.1f}</td><td>{cand.log_like:+.1f}</td><td>{_e(notes)}</td></tr>")
         out.append("</table>")
@@ -119,8 +130,11 @@ def write_report(ident, path: str, title: str = "Species identification", inputs
     parts.append(f"<h1>{_e(title)}</h1><div class='sub'>rxnsolve · {time.strftime('%Y-%m-%d %H:%M')}"
                  f"{' · ' + _e(inputs) if inputs else ''}</div>")
     parts.append("<div class='stats'>")
-    for label, val in [("species", len(species)), ("given", counts.get("known", 0)),
-                       ("identified", counts.get("identified", 0)),
+    audited = [s for s in species if s.audited]
+    stats = [("species", len(species)), ("given", counts.get("known", 0))]
+    if audited:
+        stats.append(("given, flagged by audit", len(getattr(ident, "audit_findings", []) or [])))
+    for label, val in stats + [("identified", counts.get("identified", 0)),
                        ("still open", counts.get("unresolved", 0) + counts.get("no-formula", 0)),
                        ("reactions", len(ident.mech.reactions)), ("reactions solved", len(sols))]:
         parts.append(f"<div class='stat'><b>{val}</b><span>{label}</span></div>")
@@ -181,7 +195,8 @@ def write_report(ident, path: str, title: str = "Species identification", inputs
                     svg = ""
             parts.append(f"<details class='rxn' data-k='{_e(r.equation.lower())}' data-c='{_e(sol.reaction_class)}'>"
                          f"<summary>{idx}. {_e(r.equation)}<span class='cls'>{_e(sol.reaction_class)}"
-                         f"{'' if sol.distance is None else f' · {sol.distance} edits'}</span></summary>"
+                         f"{'' if sol.distance is None else f' · {sol.distance} edits'}"
+                         f"{' · spin-forbidden' if sol.spin_allowed is False else ''}</span></summary>"
                          f"<div class='scroll'>{svg}</div><pre>{_e(lines)}</pre></details>")
     parts.append(f"<script>{JS}</script></main></body></html>")
     text = "".join(parts)
@@ -202,6 +217,7 @@ def to_json(ident) -> dict:
                            for c in st.ranked()[:5]],
         })
     out["reactions"] = [{"index": i, "class": s.reaction_class, "sigma_edits": s.distance,
+                         "spin_allowed": s.spin_allowed,
                          "summary": s.summary_lines()} for i, s in sorted(ident.solutions.items())]
     if getattr(ident, "audit_findings", None):
         out["audit"] = ident.audit_findings

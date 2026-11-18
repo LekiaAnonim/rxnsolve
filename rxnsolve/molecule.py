@@ -47,6 +47,7 @@ class Molecule:
         self.atoms: list[Atom] = []
         self.adj: list[dict[int, int]] = []
         self.multiplicity: int | None = None
+        self.spin_explicit: bool = False
         self.charge: int = 0
         self.label: str | None = None
         self._key: str | None = None
@@ -78,6 +79,7 @@ class Molecule:
         m.atoms = [a.copy() for a in self.atoms]
         m.adj = [dict(d) for d in self.adj]
         m.multiplicity = self.multiplicity
+        m.spin_explicit = self.spin_explicit
         m.charge = self.charge
         m.label = self.label
         m._key = self._key

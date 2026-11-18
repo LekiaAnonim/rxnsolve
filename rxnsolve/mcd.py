@@ -426,6 +426,9 @@ class ReactionSolution:
     r_struct: LewisStructure | None = None
     p_struct: LewisStructure | None = None
     notes: list[str] = field(default_factory=list)
+    spin_r: list[int] = field(default_factory=list)   # multiplicity of each reactant
+    spin_p: list[int] = field(default_factory=list)
+    spin_allowed: bool | None = None                  # None = could not be judged
 
     # ---- display helpers
     def label(self, i: int) -> str:
@@ -456,7 +459,60 @@ class ReactionSolution:
                 out.append(f"  electrons   : {self.label(i)}  " + ", ".join(parts))
         for a in self.arrows:
             out.append(f"  arrow       : {a.text(self.label)}")
+        if self.spin_allowed is not None:
+            out.append("  spin        : " + spin_text(self.spin_r, self.spin_p, self.spin_allowed))
         return out
+
+
+# ====================================================================
+# Spin conservation
+# ====================================================================
+
+SPIN_NAME = {1: "singlet", 2: "doublet", 3: "triplet", 4: "quartet", 5: "quintet", 6: "sextet"}
+
+
+def multiplicity_of(mol: Molecule) -> int | None:
+    """The species' multiplicity, or 2S+1 of its best Lewis structure."""
+    if mol.multiplicity:
+        return mol.multiplicity
+    structs = lewis_set(mol)
+    return structs[0].unpaired + 1 if structs else None
+
+
+def coupled_multiplicities(mults: list[int]) -> set[int]:
+    """Total multiplicities reachable by coupling the spins of several species.
+
+    Two spins S1, S2 couple to S = |S1 - S2| ... S1 + S2 in steps of 1, e.g.
+    doublet + doublet -> singlet or triplet; triplet + doublet -> doublet or quartet.
+    Worked in 2S to stay in integers.
+    """
+    if not mults:
+        return {1}
+    two = {mults[0] - 1}
+    for m in mults[1:]:
+        b = m - 1
+        two = {t for a in two for t in range(abs(a - b), a + b + 1, 2)}
+    return {t + 1 for t in two}
+
+
+def spin_check(reactants: list[Molecule], products: list[Molecule]):
+    """(reactant multiplicities, product multiplicities, allowed?) - Wigner's rule.
+
+    A step is spin-allowed when some total spin is reachable from both sides.
+    Third bodies (M) carry no spin and are not part of the species lists.
+    """
+    mr = [multiplicity_of(m) for m in reactants]
+    mp = [multiplicity_of(m) for m in products]
+    if None in mr or None in mp:
+        return mr, mp, None
+    return mr, mp, bool(coupled_multiplicities(mr) & coupled_multiplicities(mp))
+
+
+def spin_text(mr, mp, allowed) -> str:
+    def side(ms):
+        return " + ".join(SPIN_NAME.get(m, f"2S+1={m}") for m in ms)
+    verdict = "spin-allowed" if allowed else "SPIN-FORBIDDEN (needs intersystem crossing)"
+    return f"{side(mr)} -> {side(mp)}: {verdict}"
 
 
 _LEWIS_CACHE: dict[tuple, list[LewisStructure]] = {}
@@ -509,6 +565,7 @@ def solve_reaction(reactants: list[Molecule], products: list[Molecule],
     if not sol.balanced:
         sol.reaction_class = "unbalanced"
         return sol
+    sol.spin_r, sol.spin_p, sol.spin_allowed = spin_check(reactants, products)
     res = sigma_distance(reactants, products, max_total=max_total)
     if res is None:
         sol.reaction_class = f"complex (> {max_total} sigma edits)"

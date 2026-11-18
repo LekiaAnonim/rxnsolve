@@ -36,6 +36,7 @@ def cmd_identify(a, audit=False):
     known = read_known_smiles(a.known) if a.known else {}
     ident = Identifier(mech, known, use_names=not a.no_names, verbose=not a.quiet,
                        thermo=None if a.no_thermo else "auto",
+                       use_spin_labels=not a.no_spin_labels,
                        threshold=a.threshold, time_limit=a.time_limit)
     os.makedirs(a.out, exist_ok=True)
     if audit:
@@ -43,6 +44,9 @@ def cmd_identify(a, audit=False):
         findings = ident.audit(verbose=not a.quiet)
         print(f"audit: {len(findings)} of {len(known)} given structures disagree with the evidence; "
               f"{len(ident.audit_partial)} only partly checked (time budget)")
+        if not a.audit_only:
+            # then identify everything the SMILES file did not cover, seeded by it
+            ident.run()
     else:
         ident.run()
     if not a.no_reactions:
@@ -51,7 +55,12 @@ def cmd_identify(a, audit=False):
     with open(base + "SMILES.txt", "w") as fh:
         fh.write(ident.smiles_txt())
     write_json(ident, base + "identification.json")
-    title = ("Audit of " if audit else "Species identification: ") + os.path.basename(a.chem)
+    where = os.path.join(os.path.basename(os.path.dirname(os.path.abspath(a.chem))),
+                         os.path.basename(a.chem))
+    if audit:
+        title = ("Audit: " if a.audit_only else "Audit + identification: ") + where
+    else:
+        title = "Species identification: " + where
     write_report(ident, base + "report.html", title=title,
                  inputs=" + ".join(os.path.basename(x) for x in (a.chem, a.thermo, a.known) if x))
     counts = Counter(s.status for s in ident.species.values())
@@ -146,10 +155,16 @@ def main(argv=None):
         p.add_argument("-t", "--thermo", help="thermo file (if not inside chem)")
         p.add_argument("-k", "--known", help="SMILES.txt of species already known (NAME SMILES)")
         p.add_argument("-o", "--out", default="rxnsolve_out", help="output folder")
-        p.add_argument("--no-names", action="store_true", help="ignore species names")
+        p.add_argument("--no-names", action="store_true",
+                       help="ignore species names as structure hints")
+        p.add_argument("--no-spin-labels", action="store_true",
+                       help="also ignore spin labels in names: (S), CH2*, SING, (1D), (T)")
         p.add_argument("--no-thermo", action="store_true", help="ignore thermochemistry")
         p.add_argument("--no-reactions", action="store_true", help="skip solving every reaction")
         p.add_argument("--threshold", type=float, default=0.9)
+        if name == "audit":
+            p.add_argument("--audit-only", action="store_true",
+                           help="check the given structures only; do not identify the rest")
         p.add_argument("--time-limit", type=float, default=1800)
         p.add_argument("-q", "--quiet", action="store_true")
     p = sub.add_parser("solve", help="solve one reaction given as SMILES")
