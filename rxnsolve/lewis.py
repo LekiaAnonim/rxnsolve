@@ -421,6 +421,19 @@ def _geometry_penalty(mol, ring, edges, pis) -> int:
     return pen
 
 
+_FEASIBLE: dict = {}
+
+
+def has_lewis(mol: Molecule) -> bool:
+    """Does any Lewis structure exist?  Cached per constitution (and charge)."""
+    k = mol.constitution_key()
+    hit = _FEASIBLE.get(k)
+    if hit is None:
+        hit = bool(solve_lewis(mol, max_structures=1))
+        _FEASIBLE[k] = hit
+    return hit
+
+
 def best_structure(mol: Molecule) -> LewisStructure:
     target = None if mol.multiplicity is None else mol.multiplicity - 1
     structs = solve_lewis(mol, unpaired=target) if target is not None else []

@@ -282,7 +282,8 @@ class TestReportAndApp(unittest.TestCase):
             self.assertEqual(len(pages), 10)
             with open(os.path.join(out, "species", next(p for p in pages if "S9" in p))) as fh:
                 page = fh.read()
-            for step in ("Formula", "Candidates", "Lewis structure", "Thermochemistry", "Reactions", "Decision"):
+            for step in ("Formula", "Candidates", "Lewis structure", "Thermochemistry", "Reactions",
+                         "Entropy and heat capacity", "Kinetics", "Decision"):
                 self.assertIn(f"<h3>{step}</h3>", page)
             self.assertIn("<svg", page)
             self.assertEqual(res["counts"].get("identified"), 10)
@@ -342,6 +343,82 @@ class TestThermoFallback(unittest.TestCase):
         mech = parse_chemkin_text("H2O", [("H", 2), ("O", 1)])
         ident = Identifier(mech, {}, use_names=False)
         self.assertIn("not found", ident.thermo_info)
+
+
+KIN_MECH = """ELEMENTS H C END
+SPECIES PENT H H2 SIB X END
+THERMO ALL
+300.000  1000.000  5000.000
+{thermo}END
+REACTIONS
+PENT+H=H2+SIB   1.00E+06  2.50  4500.0
+PENT+H=H2+X     5.00E+05  2.50  4400.0
+END
+"""
+
+
+class TestKinetics(unittest.TestCase):
+    def _run(self, kinetics=True):
+        comps = {"PENT": [("C", 5), ("H", 12)], "H": [("H", 1)], "H2": [("H", 2)],
+                 "SIB": [("C", 5), ("H", 11)], "X": [("C", 5), ("H", 11)]}
+        thermo = "".join(_card(n, c) for n, c in comps.items())
+        with tempfile.NamedTemporaryFile("w", suffix=".inp", delete=False) as fh:
+            fh.write(KIN_MECH.format(thermo=thermo))
+            path = fh.name
+        try:
+            mech = parse_chemkin(path)
+        finally:
+            os.unlink(path)
+        if not kinetics:
+            for r in mech.reactions:
+                r.A = None
+        known = {"PENT": "CCCCC", "H": "[H]", "H2": "[H][H]", "SIB": "C[CH]CCC"}
+        return Identifier(mech, known, use_names=False, thermo=None).run()
+
+    def test_equivalent_h(self):
+        from rxnsolve.identify import equivalent_h
+        self.assertEqual(equivalent_h(S("CCCCC"), S("[CH2]CCCC")), 6)
+        self.assertEqual(equivalent_h(S("CCCCC"), S("C[CH]CCC")), 4)
+        self.assertEqual(equivalent_h(S("CCCCC"), S("CC[CH]CC")), 2)
+        self.assertEqual(equivalent_h(S("CCCCC"), S("[CH2]C(C)CC")), 0)
+
+    def test_competing_channels_decide(self):
+        # X forms with a smaller A (fewer equivalent H) and a slightly lower Ea than
+        # 2-pentyl: 3-pentyl agrees with both signals, 1-pentyl contradicts both
+        ident = self._run()
+        st = ident.species["X"]
+        cands = {c.smiles: c for c in st.candidates.values()}
+        self.assertEqual(cands["CC[CH]CC"].log_kin, 0.0)
+        self.assertLess(cands["[CH2]CCCC"].log_kin, -4.0)
+        self.assertEqual(st.status, "identified")
+        self.assertEqual(st.chosen.smiles, "CC[CH]CC")
+        self.assertIn("kinetics", st.method)
+
+    def test_without_rates_it_stays_open(self):
+        ident = self._run(kinetics=False)
+        self.assertNotEqual(ident.species["X"].status, "identified")
+
+
+class TestEntropyHeatCapacity(unittest.TestCase):
+    def test_ring_beats_chain_on_entropy_and_cp(self):
+        from rxnsolve.thermo import EntropyCpModel
+        m = EntropyCpModel.load()
+        self.assertIsNotNone(m, "saved entropy/Cp group values should ship with the package")
+        # oxirane's own NASA values: S298 58.0 cal/mol/K, Cp 11.4 / 17.9 / 24.6 / 27.5 / 31.8
+        s_mech, cp_mech = 58.0, [11.35, 17.90, 24.55, 27.49, 31.79]
+        ll_ring, z_ring, note = m.log_likelihood(S("C1CO1"), s_mech, cp_mech, 1)
+        ll_ald, z_ald, _ = m.log_likelihood(S("CC=O"), s_mech, cp_mech, 1)
+        self.assertIn("S298", note)
+        self.assertLess(z_ring, z_ald)
+        self.assertGreater(ll_ring, ll_ald + 2.0)
+
+    def test_spin_degeneracy_adds_r_ln_multiplicity(self):
+        import math
+        from rxnsolve.thermo import EntropyCpModel, R_CAL
+        m = EntropyCpModel.load()
+        s1, _ = m.predict(S("[CH2]"), 1)
+        s3, _ = m.predict(S("[CH2]"), 3)
+        self.assertAlmostEqual(s3 - s1, R_CAL * math.log(3), places=6)
 
 
 def parse_chemkin_text(name, comp):

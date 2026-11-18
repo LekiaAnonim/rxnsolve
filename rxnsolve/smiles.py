@@ -279,7 +279,20 @@ def to_smiles(mol: Molecule, structure=None) -> str:
 SPIN_PREFIX = {1: "singlet", 2: "doublet", 3: "triplet", 4: "quartet", 5: "quintet"}
 
 
+_CANON_SMILES: dict = {}
+
+
 def canonical_smiles(mol: Molecule) -> str:
+    """Cached per structure and spin; see _canonical_smiles."""
+    k = (mol.constitution_key(), mol.multiplicity)
+    hit = _CANON_SMILES.get(k)
+    if hit is None:
+        hit = _canonical_smiles(mol)
+        _CANON_SMILES[k] = hit
+    return hit
+
+
+def _canonical_smiles(mol: Molecule) -> str:
     """Deterministic SMILES: smallest string over the optimal resonance forms.
 
     RMG reads bracket atoms as radicals ([CH2] is a triplet, [O] a triplet

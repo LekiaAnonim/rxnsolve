@@ -1,4 +1,5 @@
 
-=== GRI-mech-3.0  mode=blind  seeds=0  (4.8 s)
+=== GRI-mech-3.0  mode=blind  seeds=0  (29.7 s)
 species scored: 59   correct: 59   wrong: 0   unresolved: 0   truth in top-3: 59
+large species (>10 heavy atoms): 0 scored, 0 correct, 0 wrong, 0 open
 accuracy (correct / scored): 100.0%   precision (correct / identified): 100.0%

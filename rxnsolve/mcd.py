@@ -56,6 +56,7 @@ class DeletionLevels:
         comps = [(c, component_canon(mol, c)[0]) for c in mol.components()]
         root = _State((), mol, comps)
         self.levels: list[dict[tuple, _State]] = [{root.key: root}]
+        self._memo: dict = {}
 
     def level(self, k: int) -> dict[tuple, _State]:
         while len(self.levels) <= k:
@@ -83,7 +84,7 @@ class DeletionLevels:
                             seen_h_parent.add(parent)
                         child = m.copy()
                         child.remove_bond(i, j)
-                        sub = _split_component(child, comp)
+                        sub = _split_component(child, comp, self._memo)
                         comps = st.comps[:ci] + sub + st.comps[ci + 1:]
                         key = tuple(sorted(k for _, k in comps))
                         if key not in nxt:
@@ -91,8 +92,13 @@ class DeletionLevels:
         self.levels.append(nxt)
 
 
-def _split_component(mol: Molecule, comp: list[int]):
-    """Re-split one former component after a bond deletion."""
+def _split_component(mol: Molecule, comp: list[int], memo: dict | None = None):
+    """Re-split one former component after a bond deletion.
+
+    ``memo`` maps (atoms, bonds) of a fragment to its canonical key: the same
+    fragment is reached from many deletion orders, and canonical labelling of
+    large aromatic fragments is the expensive part.
+    """
     compset = set(comp)
     seen = set()
     out = []
@@ -110,7 +116,16 @@ def _split_component(mol: Molecule, comp: list[int]):
                     seen.add(u)
                     stack.append(u)
         part.sort()
-        out.append((part, component_canon(mol, part)[0]))
+        if memo is None:
+            out.append((part, component_canon(mol, part)[0]))
+            continue
+        pset = set(part)
+        sig = (tuple(part), tuple(sorted((i, j) for i in part for j in mol.adj[i] if j in pset and i < j)))
+        key = memo.get(sig)
+        if key is None:
+            key = component_canon(mol, part)[0]
+            memo[sig] = key
+        out.append((part, key))
     return out
 
 
@@ -205,20 +220,58 @@ def side_formula(mols) -> Counter:
     return c
 
 
+_ATOM_TYPES: dict = {}
+
+
+def _atom_types(mol: Molecule) -> Counter:
+    k = mol.constitution_key()
+    hit = _ATOM_TYPES.get(k)
+    if hit is None:
+        hit = Counter()
+        for i, a in enumerate(mol.atoms):
+            nh = sum(1 for j in mol.adj[i] if mol.atoms[j].element == "H")
+            hit[(a.element, nh, len(mol.adj[i]) - nh)] += 1
+        _ATOM_TYPES[k] = hit
+    return hit
+
+
+def edit_lower_bound(reactants: list[Molecule], products: list[Molecule]) -> int:
+    """Guaranteed minimum number of sigma edits, without searching.
+
+    An atom's type is (element, H neighbours, heavy neighbours).  Breaking or
+    forming one bond changes the type of exactly two atoms, which moves the
+    type counts by at most 4 (L1).  So edits >= ceil(L1 difference / 4).
+    """
+    tr, tp = Counter(), Counter()
+    for m in reactants:
+        tr.update(_atom_types(m))
+    for m in products:
+        tp.update(_atom_types(m))
+    l1 = sum(abs(tr[k] - tp[k]) for k in set(tr) | set(tp))
+    return -(-l1 // 4)
+
+
 def sigma_distance(reactants: list[Molecule], products: list[Molecule],
                    max_total: int = 5, max_side: int = MAX_SIDE_DEPTH):
     """Minimum number of sigma bonds broken + formed, or None if > max_total.
 
     Returns (distance, a, b, key) with a bonds deleted on the left and b on
-    the right.
+    the right.  The search starts at a guaranteed lower bound (and stops at
+    once when that bound is already above max_total); at each distance the
+    cheapest split is tried first - the distance found does not depend on
+    which split finds it.
     """
     if side_formula(reactants) != side_formula(products):
         return None
-    for d in range(max_total + 1):
-        for a in range(min(d, max_side) + 1):
-            b = d - a
-            if b > max_side:
-                continue
+    lb = edit_lower_bound(reactants, products)
+    if lb > max_total:
+        return None
+    heavy_l = sum(m.heavy_count() for m in reactants)
+    heavy_r = sum(m.heavy_count() for m in products)
+    for d in range(lb, max_total + 1):
+        splits = [(a, d - a) for a in range(min(d, max_side) + 1) if d - a <= max_side]
+        splits.sort(key=lambda ab: (max(ab), ab[0] * heavy_l + ab[1] * heavy_r))
+        for a, b in splits:
             left = side_states(reactants, a)
             right = side_states(products, b)
             if len(left) > len(right):
@@ -381,7 +434,8 @@ def _keep(results, mol, edits, solve_lewis):
     old = results.get(k)
     if old is not None and old[1] <= edits:
         return
-    if not solve_lewis(mol, max_structures=1):
+    from .lewis import has_lewis
+    if not has_lewis(mol):
         return
     results[k] = (mol, edits)
 

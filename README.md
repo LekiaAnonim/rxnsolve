@@ -1,4 +1,4 @@
-# rxnsolve — reaction-constrained species identification for CHEMKIN files
+# rxnsolve: reaction-constrained species identification for CHEMKIN files
 
 A second species-identification system for Prometheus, independent of RMG-Py.
 The RMG importer (`importChemkin.py`) asks *"does an RMG reaction family
@@ -54,7 +54,8 @@ as `triplet CH2 + H2 -> CH4` as spin-forbidden.
 For a species *S* and candidate structure *c*:
 
 ```
-log P(c | mechanism) = prior(c) + name(c) + thermo(c) + Σ_reactions −1.5 · w_r · (d_r(c) − min d_r)
+log P(c | mechanism) = prior(c) + name(c) + thermo(c) + entropy_cp(c) + kinetics(c)
+                       + Σ_reactions −1.5 · w_r · (d_r(c) − min d_r)
 ```
 
 * **formula:** hard constraint from the NASA thermo card.
@@ -65,6 +66,15 @@ log P(c | mechanism) = prior(c) + name(c) + thermo(c) + Σ_reactions −1.5 · w
   * otherwise, group additivity vs. the mechanism's NASA H₂₉₈.
 
   This term is robust to bad thermo cards: a mismatch saturates at −3, and when no candidate fits, the species' thermo counts a quarter as much.
+* **entropy_cp(c):** S₂₉₈ and Cp from 300 to 1500 K predicted from the structure
+  (group additivity plus R ln(2S+1) for spin) against the species' own thermo
+  card. Rings have lower entropy than their open-chain isomers. Sigma widens for
+  groups seen in few structures, deviations within one sigma are ignored, and a
+  card whose H₂₉₈ fits no candidate is down-weighted as a whole.
+* **kinetics(c):** competing H-abstraction channels from one parent, where the
+  other product is already identified. A larger A should go with more
+  equivalent hydrogens, a lower Ea with the weaker C–H bond. Each contradiction
+  costs ln(0.1/0.9) ≈ −2.2, at most three per species.
 * **d_r(c):** the minimum number of σ bonds broken + formed to run reaction *r* with *S = c*, with every other species of *r* already resolved. Elementary steps need 1–3 edits.
 * **w_r:** 0.25 for lumped steps (3+ species on one side). It is halved again when no candidate explains the step in under 3 edits.
 

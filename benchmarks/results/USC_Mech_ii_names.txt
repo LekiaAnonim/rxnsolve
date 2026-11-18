@@ -1,6 +1,7 @@
 
-=== USC_Mech_ii  mode=names  seeds=0  (82.9 s)
+=== USC_Mech_ii  mode=names  seeds=0  (48.8 s)
 species scored: 110   correct: 106   wrong: 2   unresolved: 2   truth in top-3: 110
+large species (>10 heavy atoms): 0 scored, 0 correct, 0 wrong, 0 open
 accuracy (correct / scored): 96.4%   precision (correct / identified): 98.1%
   WRONG H2C4O          C4H2O     got=C#COC#C                  truth=C=C=C=C=O              conf=0.75 rank=1 n=85 reactions +3.0 from 3 witness reactions, structure plausibility +1.5
   WRONG C6H3           C6H3      got=C#C[C]=CC#C              truth=[CH]=CC#CC#C           conf=1.00 rank=1 n=153 reactions +12.0 from 8 witness reactions

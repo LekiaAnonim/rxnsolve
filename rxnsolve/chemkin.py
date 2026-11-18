@@ -71,6 +71,9 @@ class Reaction:
     falloff: bool = False
     duplicate: bool = False
     line: int = 0
+    A: float | None = None         # modified Arrhenius k = A T^n exp(-Ea/RT), as written
+    n: float | None = None
+    Ea: float | None = None        # in the units of the REACTIONS line (default cal/mol)
 
     def species(self) -> set[str]:
         return set(self.reactants) | set(self.products)
@@ -310,6 +313,10 @@ def _parse_reactions(rxn_lines, mech: Mechanism) -> None:
         eq = m.group(1).strip()
         rxn = _parse_equation(eq, by_len, species, len(mech.reactions) + 1, ln, mech)
         if rxn is not None:
+            try:
+                rxn.A, rxn.n, rxn.Ea = (_float(x) for x in m.groups()[1:4])
+            except ValueError:
+                pass
             mech.reactions.append(rxn)
 
 

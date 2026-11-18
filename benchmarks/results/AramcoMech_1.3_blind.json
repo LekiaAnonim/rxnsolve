@@ -2,7 +2,7 @@
  "model": "AramcoMech_1.3",
  "mode": "blind",
  "seeds": [],
- "seconds": 142.32143902778625,
+ "seconds": 64.39057993888855,
  "correct": 245,
  "wrong": 4,
  "unresolved": 2,
@@ -167,8 +167,8 @@
    "verdict": "OK",
    "got": "O=COO",
    "truth": "O=COO",
-   "conf": 1.0,
-   "method": "thermochemistry +8.3",
+   "conf": 0.976,
+   "method": "structure plausibility +6.0, thermochemistry +3.6",
    "rank_of_truth": 0,
    "n_cand": 10
   },
@@ -178,8 +178,8 @@
    "verdict": "OK",
    "got": "[CH-]=[OH+]",
    "truth": "[CH-]=[OH+]",
-   "conf": 0.909,
-   "method": "thermochemistry +8.3",
+   "conf": 0.945,
+   "method": "thermochemistry +8.3, entropy and heat capacity +0.5",
    "rank_of_truth": 0,
    "n_cand": 2
   },
@@ -189,8 +189,8 @@
    "verdict": "OK",
    "got": "O=CO[O]",
    "truth": "[O]OC=O",
-   "conf": 0.993,
-   "method": "thermochemistry +5.1",
+   "conf": 0.982,
+   "method": "thermochemistry +5.1, reactions +3.0 from 9 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 10
   },
@@ -201,7 +201,7 @@
    "got": "O=CO",
    "truth": "O=CO",
    "conf": 1.0,
-   "method": "thermochemistry +8.3, structure plausibility +2.5",
+   "method": "thermochemistry +8.3, structure plausibility +3.0",
    "rank_of_truth": 0,
    "n_cand": 6
   },
@@ -211,7 +211,7 @@
    "verdict": "OK",
    "got": "O=C[O]",
    "truth": "[O]C=O",
-   "conf": 1.0,
+   "conf": 0.999,
    "method": "thermochemistry +8.3",
    "rank_of_truth": 0,
    "n_cand": 5
@@ -233,8 +233,8 @@
    "verdict": "OK",
    "got": "[O]OCO",
    "truth": "[O]OCO",
-   "conf": 0.989,
-   "method": "thermochemistry +4.6",
+   "conf": 0.999,
+   "method": "thermochemistry +8.3",
    "rank_of_truth": 0,
    "n_cand": 7
   },
@@ -244,8 +244,8 @@
    "verdict": "OK",
    "got": "[O]COO",
    "truth": "[O]COO",
-   "conf": 0.981,
-   "method": "thermochemistry +4.0",
+   "conf": 0.999,
+   "method": "thermochemistry +4.0, entropy and heat capacity +4.0",
    "rank_of_truth": 0,
    "n_cand": 7
   },
@@ -255,8 +255,8 @@
    "verdict": "OK",
    "got": "[O]CO",
    "truth": "[O]CO",
-   "conf": 0.977,
-   "method": "thermochemistry +3.8",
+   "conf": 0.999,
+   "method": "entropy and heat capacity +4.7, thermochemistry +3.8",
    "rank_of_truth": 0,
    "n_cand": 4
   },
@@ -278,7 +278,7 @@
    "got": "[CH2]O",
    "truth": "[CH2]O",
    "conf": 1.0,
-   "method": "thermochemistry +8.0",
+   "method": "thermochemistry +8.0, entropy and heat capacity +0.6",
    "rank_of_truth": 0,
    "n_cand": 2
   },
@@ -289,7 +289,7 @@
    "got": "C[O]",
    "truth": "C[O]",
    "conf": 1.0,
-   "method": "thermochemistry +8.1",
+   "method": "thermochemistry +8.1, entropy and heat capacity +1.2",
    "rank_of_truth": 0,
    "n_cand": 2
   },
@@ -300,7 +300,7 @@
    "got": "COO",
    "truth": "COO",
    "conf": 1.0,
-   "method": "thermochemistry +8.3",
+   "method": "thermochemistry +8.3, entropy and heat capacity +1.0",
    "rank_of_truth": 0,
    "n_cand": 2
   },
@@ -310,8 +310,8 @@
    "verdict": "OK",
    "got": "CO[O]",
    "truth": "CO[O]",
-   "conf": 0.999,
-   "method": "thermochemistry +8.3",
+   "conf": 1.0,
+   "method": "thermochemistry +8.3, entropy and heat capacity +0.5",
    "rank_of_truth": 0,
    "n_cand": 4
   },
@@ -464,8 +464,8 @@
    "verdict": "OK",
    "got": "C=CO",
    "truth": "C=CO",
-   "conf": 0.999,
-   "method": "thermochemistry +8.3",
+   "conf": 1.0,
+   "method": "thermochemistry +8.3, entropy and heat capacity +0.7",
    "rank_of_truth": 0,
    "n_cand": 8
   },
@@ -475,7 +475,7 @@
    "verdict": "OK",
    "got": "[CH]=CO",
    "truth": "[CH]=CO",
-   "conf": 0.906,
+   "conf": 0.916,
    "method": "structure plausibility +1.5, thermochemistry +0.9",
    "rank_of_truth": 0,
    "n_cand": 9
@@ -486,7 +486,7 @@
    "verdict": "OK",
    "got": "C[C]=O",
    "truth": "C[C]=O",
-   "conf": 0.995,
+   "conf": 0.992,
    "method": "thermochemistry +5.4",
    "rank_of_truth": 0,
    "n_cand": 9
@@ -497,8 +497,8 @@
    "verdict": "OK",
    "got": "C=C[O]",
    "truth": "[CH2]C=O",
-   "conf": 0.995,
-   "method": "thermochemistry +5.4",
+   "conf": 0.999,
+   "method": "thermochemistry +5.4, entropy and heat capacity +1.9",
    "rank_of_truth": 0,
    "n_cand": 9
   },
@@ -508,10 +508,10 @@
    "verdict": "OK",
    "got": "O=CCO[O]",
    "truth": "[O]OCC=O",
-   "conf": 0.949,
+   "conf": 0.9,
    "method": "thermochemistry +3.1",
    "rank_of_truth": 0,
-   "n_cand": 85
+   "n_cand": 80
   },
   {
    "name": "HO2CH2CO",
@@ -519,10 +519,10 @@
    "verdict": "OK",
    "got": "O=[C]COO",
    "truth": "O=[C]COO",
-   "conf": 0.977,
-   "method": "thermochemistry +3.1, reactions +0.8 from 3 witness reactions",
+   "conf": 0.998,
+   "method": "reactions +3.8 from 4 witness reactions, thermochemistry +3.0",
    "rank_of_truth": 0,
-   "n_cand": 85
+   "n_cand": 86
   },
   {
    "name": "CH2CO",
@@ -552,8 +552,8 @@
    "verdict": "OK",
    "got": "C#CO",
    "truth": "C#CO",
-   "conf": 0.997,
-   "method": "thermochemistry +4.7, structure plausibility +1.5",
+   "conf": 0.999,
+   "method": "thermochemistry +8.3",
    "rank_of_truth": 0,
    "n_cand": 9
   },
@@ -563,8 +563,8 @@
    "verdict": "OK",
    "got": "CC(=O)OO",
    "truth": "CC(=O)OO",
-   "conf": 0.993,
-   "method": "thermochemistry +3.1, structure plausibility +3.0",
+   "conf": 0.98,
+   "method": "thermochemistry +4.2, structure plausibility +3.0, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 64
   },
@@ -574,10 +574,10 @@
    "verdict": "OK",
    "got": "CC(=O)O[O]",
    "truth": "CC(=O)O[O]",
-   "conf": 0.968,
-   "method": "thermochemistry +3.2, structure plausibility +1.5",
+   "conf": 0.993,
+   "method": "reactions +6.8 from 5 witness reactions, thermochemistry +3.2, structure plausibility +1.5",
    "rank_of_truth": 0,
-   "n_cand": 80
+   "n_cand": 81
   },
   {
    "name": "CH3CO2",
@@ -585,8 +585,8 @@
    "verdict": "OK",
    "got": "CC(=O)[O]",
    "truth": "CC([O])=O",
-   "conf": 0.988,
-   "method": "thermochemistry +3.7, structure plausibility +1.0",
+   "conf": 0.997,
+   "method": "thermochemistry +3.7, entropy and heat capacity +1.4, structure plausibility +1.0",
    "rank_of_truth": 0,
    "n_cand": 32
   },
@@ -607,8 +607,8 @@
    "verdict": "OK",
    "got": "CC[O]",
    "truth": "CC[O]",
-   "conf": 0.951,
-   "method": "thermochemistry +3.5",
+   "conf": 0.967,
+   "method": "thermochemistry +3.9",
    "rank_of_truth": 0,
    "n_cand": 4
   },
@@ -618,8 +618,8 @@
    "verdict": "OK",
    "got": "[CH2]CO",
    "truth": "[CH2]CO",
-   "conf": 0.958,
-   "method": "thermochemistry +3.2",
+   "conf": 0.986,
+   "method": "thermochemistry +3.2, entropy and heat capacity +1.3",
    "rank_of_truth": 0,
    "n_cand": 4
   },
@@ -629,7 +629,7 @@
    "verdict": "OK",
    "got": "C[CH]O",
    "truth": "C[CH]O",
-   "conf": 0.998,
+   "conf": 0.999,
    "method": "thermochemistry +6.9",
    "rank_of_truth": 0,
    "n_cand": 4
@@ -640,8 +640,8 @@
    "verdict": "OK",
    "got": "[O]OCCO",
    "truth": "[O]OCCO",
-   "conf": 0.996,
-   "method": "thermochemistry +3.5, reactions +3.4 from 2 witness reactions",
+   "conf": 0.947,
+   "method": "thermochemistry +3.0, entropy and heat capacity +0.9",
    "rank_of_truth": 0,
    "n_cand": 29
   },
@@ -651,8 +651,8 @@
    "verdict": "OK",
    "got": "CCOO",
    "truth": "CCOO",
-   "conf": 0.986,
-   "method": "thermochemistry +4.3",
+   "conf": 0.996,
+   "method": "thermochemistry +4.3, entropy and heat capacity +1.4",
    "rank_of_truth": 0,
    "n_cand": 5
   },
@@ -662,7 +662,7 @@
    "verdict": "OK",
    "got": "CCO[O]",
    "truth": "CCO[O]",
-   "conf": 0.993,
+   "conf": 0.994,
    "method": "thermochemistry +5.3",
    "rank_of_truth": 0,
    "n_cand": 12
@@ -673,8 +673,8 @@
    "verdict": "OK",
    "got": "[CH2]COO",
    "truth": "[CH2]COO",
-   "conf": 0.933,
-   "method": "thermochemistry +3.1",
+   "conf": 0.984,
+   "method": "thermochemistry +3.1, entropy and heat capacity +2.5",
    "rank_of_truth": 0,
    "n_cand": 12
   },
@@ -684,8 +684,8 @@
    "verdict": "OK",
    "got": "C1CO1",
    "truth": "C1CO1",
-   "conf": 0.993,
-   "method": "thermochemistry +8.3",
+   "conf": 0.997,
+   "method": "structure plausibility +3.5, thermochemistry +3.1",
    "rank_of_truth": 0,
    "n_cand": 8
   },
@@ -695,8 +695,8 @@
    "verdict": "OK",
    "got": "[CH]1CO1",
    "truth": "[CH]1CO1",
-   "conf": 0.988,
-   "method": "thermochemistry +7.1",
+   "conf": 0.994,
+   "method": "thermochemistry +8.3",
    "rank_of_truth": 0,
    "n_cand": 9
   },
@@ -718,7 +718,7 @@
    "got": "C=C(C)[O]",
    "truth": "[CH2]C(C)=O",
    "conf": 1.0,
-   "method": "reactions +17.2 from 11 witness reactions, thermochemistry +6.7, structure plausibility +2.5",
+   "method": "reactions +15.0 from 10 witness reactions, thermochemistry +6.7, structure plausibility +2.5",
    "rank_of_truth": 0,
    "n_cand": 38
   },
@@ -728,10 +728,10 @@
    "verdict": "OK",
    "got": "CC(CO[O])=O",
    "truth": "CC(=O)CO[O]",
-   "conf": 0.997,
-   "method": "thermochemistry +3.3, reactions +3.0 from 4 witness reactions",
+   "conf": 0.992,
+   "method": "thermochemistry +3.3, entropy and heat capacity +1.9",
    "rank_of_truth": 0,
-   "n_cand": 102
+   "n_cand": 87
   },
   {
    "name": "C3KET21",
@@ -739,10 +739,10 @@
    "verdict": "OK",
    "got": "CC(COO)=O",
    "truth": "CC(=O)COO",
-   "conf": 0.915,
-   "method": "thermochemistry +3.2, reactions +0.8 from 1 witness reaction",
+   "conf": 0.952,
+   "method": "thermochemistry +4.1",
    "rank_of_truth": 0,
-   "n_cand": 88
+   "n_cand": 80
   },
   {
    "name": "C2H3CHO",
@@ -750,8 +750,8 @@
    "verdict": "OK",
    "got": "C=CC=O",
    "truth": "C=CC=O",
-   "conf": 0.968,
-   "method": "thermochemistry +3.0, structure plausibility +0.5",
+   "conf": 0.996,
+   "method": "thermochemistry +5.7, structure plausibility +1.0",
    "rank_of_truth": 0,
    "n_cand": 49
   },
@@ -761,8 +761,8 @@
    "verdict": "OK",
    "got": "C=C[C]=O",
    "truth": "C=C[C]=O",
-   "conf": 0.964,
-   "method": "thermochemistry +4.0",
+   "conf": 0.994,
+   "method": "thermochemistry +8.3, reactions +3.0 from 15 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 48
   },
@@ -783,8 +783,8 @@
    "verdict": "OK",
    "got": "CC[C]=O",
    "truth": "CC[C]=O",
-   "conf": 0.928,
-   "method": "thermochemistry +3.0",
+   "conf": 0.992,
+   "method": "thermochemistry +3.7, entropy and heat capacity +1.7",
    "rank_of_truth": 0,
    "n_cand": 38
   },
@@ -795,7 +795,7 @@
    "got": "COC",
    "truth": "COC",
    "conf": 1.0,
-   "method": "thermochemistry +8.3",
+   "method": "thermochemistry +8.3, entropy and heat capacity +0.7",
    "rank_of_truth": 0,
    "n_cand": 2
   },
@@ -805,8 +805,8 @@
    "verdict": "OK",
    "got": "[CH2]OC",
    "truth": "[CH2]OC",
-   "conf": 0.983,
-   "method": "thermochemistry +4.3",
+   "conf": 0.991,
+   "method": "thermochemistry +4.3, entropy and heat capacity +0.8",
    "rank_of_truth": 0,
    "n_cand": 4
   },
@@ -816,8 +816,8 @@
    "verdict": "OK",
    "got": "COCO[O]",
    "truth": "COCO[O]",
-   "conf": 0.999,
-   "method": "thermochemistry +3.8, reactions +3.6 from 5 witness reactions",
+   "conf": 0.904,
+   "method": "thermochemistry +3.5",
    "rank_of_truth": 0,
    "n_cand": 29
   },
@@ -827,7 +827,7 @@
    "verdict": "OK",
    "got": "[CH2]OCOO",
    "truth": "[CH2]OCOO",
-   "conf": 0.934,
+   "conf": 0.956,
    "method": "thermochemistry +3.2, reactions +0.8 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 29
@@ -849,7 +849,7 @@
    "verdict": "OK",
    "got": "COC[O]",
    "truth": "COC[O]",
-   "conf": 0.956,
+   "conf": 0.975,
    "method": "thermochemistry +3.8",
    "rank_of_truth": 0,
    "n_cand": 12
@@ -860,10 +860,10 @@
    "verdict": "OK",
    "got": "[O]OCOCOO",
    "truth": "[O]OCOCOO",
-   "conf": 0.979,
-   "method": "thermochemistry +4.0",
+   "conf": 0.991,
+   "method": "thermochemistry +3.1, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
-   "n_cand": 85
+   "n_cand": 82
   },
   {
    "name": "HO2CH2OCHO",
@@ -871,8 +871,8 @@
    "verdict": "OK",
    "got": "O=COCOO",
    "truth": "O=COCOO",
-   "conf": 0.997,
-   "method": "thermochemistry +5.5, reactions +1.5 from 1 witness reaction",
+   "conf": 0.99,
+   "method": "thermochemistry +5.6, reactions +1.5 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 89
   },
@@ -882,8 +882,8 @@
    "verdict": "OK",
    "got": "O=COC[O]",
    "truth": "[O]COC=O",
-   "conf": 0.989,
-   "method": "thermochemistry +3.0, reactions +3.0 from 1 witness reaction",
+   "conf": 0.987,
+   "method": "thermochemistry +3.4, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 81
   },
@@ -904,8 +904,8 @@
    "verdict": "OK",
    "got": "COC=O",
    "truth": "COC=O",
-   "conf": 0.986,
-   "method": "thermochemistry +3.3, structure plausibility +1.0",
+   "conf": 0.999,
+   "method": "thermochemistry +8.3",
    "rank_of_truth": 0,
    "n_cand": 26
   },
@@ -915,7 +915,7 @@
    "verdict": "OK",
    "got": "CO[C]=O",
    "truth": "CO[C]=O",
-   "conf": 0.921,
+   "conf": 0.963,
    "method": "thermochemistry +3.2",
    "rank_of_truth": 0,
    "n_cand": 32
@@ -926,7 +926,7 @@
    "verdict": "OK",
    "got": "[CH2]OC=O",
    "truth": "[CH2]OC=O",
-   "conf": 1.0,
+   "conf": 0.998,
    "method": "uniqueness +6.0, thermochemistry +3.1",
    "rank_of_truth": 0,
    "n_cand": 32
@@ -959,7 +959,7 @@
    "verdict": "OK",
    "got": "C[CH]C",
    "truth": "C[CH]C",
-   "conf": 0.97,
+   "conf": 0.977,
    "method": "thermochemistry +3.5",
    "rank_of_truth": 0,
    "n_cand": 2
@@ -1003,7 +1003,7 @@
    "verdict": "OK",
    "got": "[CH]=CC",
    "truth": "[CH]=CC",
-   "conf": 0.977,
+   "conf": 0.979,
    "method": "thermochemistry +4.0",
    "rank_of_truth": 0,
    "n_cand": 6
@@ -1014,7 +1014,7 @@
    "verdict": "OK",
    "got": "C=[C]C",
    "truth": "C=[C]C",
-   "conf": 0.978,
+   "conf": 0.979,
    "method": "thermochemistry +4.0",
    "rank_of_truth": 0,
    "n_cand": 6
@@ -1025,7 +1025,7 @@
    "verdict": "OK",
    "got": "C#CC",
    "truth": "C#CC",
-   "conf": 0.973,
+   "conf": 0.978,
    "method": "thermochemistry +3.1, structure plausibility +0.5",
    "rank_of_truth": 0,
    "n_cand": 8
@@ -1036,8 +1036,8 @@
    "verdict": "OK",
    "got": "C=C=C",
    "truth": "C=C=C",
-   "conf": 0.933,
-   "method": "thermochemistry +5.9, structure plausibility +3.5",
+   "conf": 0.964,
+   "method": "thermochemistry +7.3, structure plausibility +3.5, kinetics +2.2",
    "rank_of_truth": 0,
    "n_cand": 8
   },
@@ -1047,8 +1047,8 @@
    "verdict": "OK",
    "got": "C#C[CH2]",
    "truth": "C#C[CH2]",
-   "conf": 0.999,
-   "method": "thermochemistry +8.3",
+   "conf": 1.0,
+   "method": "thermochemistry +8.3, entropy and heat capacity +0.6",
    "rank_of_truth": 0,
    "n_cand": 7
   },
@@ -1059,7 +1059,7 @@
    "got": "C=CC[O]",
    "truth": "C=CC[O]",
    "conf": 1.0,
-   "method": "reactions +7.5 from 5 witness reactions, thermochemistry +3.3, structure plausibility +1.5",
+   "method": "reactions +15.0 from 10 witness reactions, thermochemistry +3.6, structure plausibility +2.5",
    "rank_of_truth": 0,
    "n_cand": 38
   },
@@ -1069,8 +1069,8 @@
    "verdict": "OK",
    "got": "C[CH]COO",
    "truth": "C[CH]COO",
-   "conf": 0.987,
-   "method": "thermochemistry +3.3, reactions +1.9 from 3 witness reactions",
+   "conf": 0.968,
+   "method": "thermochemistry +3.1, entropy and heat capacity +0.9",
    "rank_of_truth": 0,
    "n_cand": 38
   },
@@ -1091,7 +1091,7 @@
    "verdict": "OK",
    "got": "[CH2]C(C)OO",
    "truth": "[CH2]C(C)OO",
-   "conf": 0.992,
+   "conf": 0.995,
    "method": "reactions +4.5 from 3 witness reactions, thermochemistry +1.2",
    "rank_of_truth": 0,
    "n_cand": 38
@@ -1102,7 +1102,7 @@
    "verdict": "OK",
    "got": "CC(COO)O[O]",
    "truth": "CC(COO)O[O]",
-   "conf": 0.943,
+   "conf": 0.944,
    "method": "reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 86
@@ -1113,10 +1113,10 @@
    "verdict": "OK",
    "got": "[O]OCCCOO",
    "truth": "[O]OCCCOO",
-   "conf": 0.998,
-   "method": "thermochemistry +3.8, reactions +3.0 from 1 witness reaction",
+   "conf": 0.996,
+   "method": "thermochemistry +5.0",
    "rank_of_truth": 0,
-   "n_cand": 85
+   "n_cand": 96
   },
   {
    "name": "C3H6OOH2-1O2",
@@ -1124,10 +1124,10 @@
    "verdict": "OK",
    "got": "CC(CO[O])OO",
    "truth": "CC(CO[O])OO",
-   "conf": 0.914,
-   "method": "thermochemistry +2.5",
+   "conf": 0.95,
+   "method": "thermochemistry +2.5, entropy and heat capacity +0.5",
    "rank_of_truth": 0,
-   "n_cand": 96
+   "n_cand": 98
   },
   {
    "name": "C3H6OOH2-2",
@@ -1135,7 +1135,7 @@
    "verdict": "OK",
    "got": "C[C](C)OO",
    "truth": "C[C](C)OO",
-   "conf": 0.945,
+   "conf": 0.951,
    "method": "reactions +3.0 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 38
@@ -1146,8 +1146,8 @@
    "verdict": "OK",
    "got": "CCCOO",
    "truth": "CCCOO",
-   "conf": 0.967,
-   "method": "thermochemistry +3.5",
+   "conf": 0.981,
+   "method": "thermochemistry +8.3",
    "rank_of_truth": 0,
    "n_cand": 11
   },
@@ -1157,7 +1157,7 @@
    "verdict": "OK",
    "got": "CC(C)OO",
    "truth": "CC(C)OO",
-   "conf": 0.987,
+   "conf": 0.989,
    "method": "thermochemistry +5.2",
    "rank_of_truth": 0,
    "n_cand": 11
@@ -1168,8 +1168,8 @@
    "verdict": "OK",
    "got": "CCCO[O]",
    "truth": "CCCO[O]",
-   "conf": 0.978,
-   "method": "thermochemistry +4.7",
+   "conf": 0.988,
+   "method": "thermochemistry +5.8",
    "rank_of_truth": 0,
    "n_cand": 38
   },
@@ -1179,7 +1179,7 @@
    "verdict": "OK",
    "got": "CC(C)O[O]",
    "truth": "CC(C)O[O]",
-   "conf": 0.986,
+   "conf": 0.992,
    "method": "thermochemistry +5.5",
    "rank_of_truth": 0,
    "n_cand": 38
@@ -1190,8 +1190,8 @@
    "verdict": "OK",
    "got": "CCC[O]",
    "truth": "CCC[O]",
-   "conf": 1.0,
-   "method": "reactions +24.8 from 12 witness reactions, thermochemistry +3.0",
+   "conf": 0.927,
+   "method": "thermochemistry +3.0",
    "rank_of_truth": 0,
    "n_cand": 10
   },
@@ -1201,8 +1201,8 @@
    "verdict": "OK",
    "got": "CC(C)[O]",
    "truth": "CC(C)[O]",
-   "conf": 1.0,
-   "method": "reactions +27.8 from 13 witness reactions, thermochemistry +3.2",
+   "conf": 0.959,
+   "method": "thermochemistry +3.2",
    "rank_of_truth": 0,
    "n_cand": 10
   },
@@ -1212,8 +1212,8 @@
    "verdict": "OK",
    "got": "CC1CO1",
    "truth": "CC1CO1",
-   "conf": 0.982,
-   "method": "reactions +3.4 from 10 witness reactions, thermochemistry +3.1",
+   "conf": 0.96,
+   "method": "thermochemistry +3.1, reactions +1.9 from 9 witness reactions, entropy and heat capacity +0.7",
    "rank_of_truth": 0,
    "n_cand": 23
   },
@@ -1223,8 +1223,8 @@
    "verdict": "OK",
    "got": "C1COC1",
    "truth": "C1COC1",
-   "conf": 0.916,
-   "method": "thermochemistry +3.5",
+   "conf": 0.986,
+   "method": "thermochemistry +3.6, structure plausibility +1.0, entropy and heat capacity +0.8",
    "rank_of_truth": 0,
    "n_cand": 23
   },
@@ -1234,10 +1234,10 @@
    "verdict": "OK",
    "got": "CC(C=O)OO",
    "truth": "CC(C=O)OO",
-   "conf": 0.961,
-   "method": "thermochemistry +2.8, reactions +2.6 from 2 witness reactions",
+   "conf": 0.903,
+   "method": "thermochemistry +2.9, reactions +1.1 from 1 witness reaction",
    "rank_of_truth": 0,
-   "n_cand": 103
+   "n_cand": 88
   },
   {
    "name": "C3KET13",
@@ -1245,10 +1245,10 @@
    "verdict": "OK",
    "got": "O=CCCOO",
    "truth": "O=CCCOO",
-   "conf": 0.959,
-   "method": "thermochemistry +3.0, reactions +1.9 from 2 witness reactions",
+   "conf": 0.944,
+   "method": "thermochemistry +3.0, reactions +1.1 from 1 witness reaction",
    "rank_of_truth": 0,
-   "n_cand": 106
+   "n_cand": 95
   },
   {
    "name": "C3H51-2,3OOH",
@@ -1256,10 +1256,10 @@
    "verdict": "OK",
    "got": "[CH2]C(COO)OO",
    "truth": "[CH2]C(COO)OO",
-   "conf": 0.987,
-   "method": "thermochemistry +3.3, reactions +1.5 from 2 witness reactions",
+   "conf": 0.966,
+   "method": "thermochemistry +3.3",
    "rank_of_truth": 0,
-   "n_cand": 98
+   "n_cand": 94
   },
   {
    "name": "C3H52-1,3OOH",
@@ -1267,7 +1267,7 @@
    "verdict": "OK",
    "got": "OOC[CH]COO",
    "truth": "OOC[CH]COO",
-   "conf": 0.958,
+   "conf": 0.954,
    "method": "thermochemistry +3.3",
    "rank_of_truth": 0,
    "n_cand": 94
@@ -1278,8 +1278,8 @@
    "verdict": "OK",
    "got": "[CH2]C(C)O",
    "truth": "[CH2]C(C)O",
-   "conf": 0.723,
-   "method": "thermochemistry +1.0",
+   "conf": 0.97,
+   "method": "reactions +3.0 from 2 witness reactions, thermochemistry +1.0",
    "rank_of_truth": 0,
    "n_cand": 10
   },
@@ -1289,10 +1289,10 @@
    "verdict": "OK",
    "got": "CC(CO[O])O",
    "truth": "CC(O)CO[O]",
-   "conf": 0.974,
-   "method": "reactions +3.0 from 2 witness reactions, thermochemistry +2.3",
+   "conf": 0.562,
+   "method": "thermochemistry +1.4",
    "rank_of_truth": 0,
-   "n_cand": 84
+   "n_cand": 83
   },
   {
    "name": "CH3CHCO",
@@ -1300,8 +1300,8 @@
    "verdict": "OK",
    "got": "CC=C=O",
    "truth": "CC=C=O",
-   "conf": 0.92,
-   "method": "thermochemistry +3.0",
+   "conf": 1.0,
+   "method": "structure plausibility +9.5, reactions +3.6 from 6 witness reactions, thermochemistry +3.0",
    "rank_of_truth": 0,
    "n_cand": 49
   },
@@ -1311,10 +1311,10 @@
    "verdict": "OK",
    "got": "C=CCOO",
    "truth": "C=CCOO",
-   "conf": 0.997,
-   "method": "thermochemistry +3.1, reactions +3.0 from 1 witness reaction",
+   "conf": 0.945,
+   "method": "thermochemistry +3.1",
    "rank_of_truth": 0,
-   "n_cand": 88
+   "n_cand": 80
   },
   {
    "name": "C2H3OOH",
@@ -1322,8 +1322,8 @@
    "verdict": "OK",
    "got": "C=COO",
    "truth": "C=COO",
-   "conf": 0.992,
-   "method": "thermochemistry +3.6, structure plausibility +2.5",
+   "conf": 0.997,
+   "method": "thermochemistry +3.1, structure plausibility +3.0",
    "rank_of_truth": 0,
    "n_cand": 26
   },
@@ -1333,8 +1333,8 @@
    "verdict": "OK",
    "got": "C1=CC1",
    "truth": "C1=CC1",
-   "conf": 0.987,
-   "method": "thermochemistry +3.3, structure plausibility +1.5",
+   "conf": 0.983,
+   "method": "thermochemistry +2.9, structure plausibility +1.5",
    "rank_of_truth": 0,
    "n_cand": 8
   },
@@ -1344,7 +1344,7 @@
    "verdict": "OK",
    "got": "singlet[C]=C",
    "truth": "[C]=C",
-   "conf": 0.987,
+   "conf": 0.986,
    "method": "thermochemistry +8.3",
    "rank_of_truth": 0,
    "n_cand": 2
@@ -1366,7 +1366,7 @@
    "verdict": "OK",
    "got": "C=CCC",
    "truth": "C=CCC",
-   "conf": 0.955,
+   "conf": 0.961,
    "method": "thermochemistry +3.6",
    "rank_of_truth": 0,
    "n_cand": 11
@@ -1377,7 +1377,7 @@
    "verdict": "OK",
    "got": "CC=CC",
    "truth": "CC=CC",
-   "conf": 0.932,
+   "conf": 0.935,
    "method": "thermochemistry +3.2",
    "rank_of_truth": 0,
    "n_cand": 11
@@ -1388,7 +1388,7 @@
    "verdict": "OK",
    "got": "[CH2]CCC",
    "truth": "[CH2]CCC",
-   "conf": 0.937,
+   "conf": 0.939,
    "method": "thermochemistry +3.2",
    "rank_of_truth": 0,
    "n_cand": 4
@@ -1399,8 +1399,8 @@
    "verdict": "OK",
    "got": "C[CH]CC",
    "truth": "C[CH]CC",
-   "conf": 0.918,
-   "method": "thermochemistry +3.1",
+   "conf": 0.937,
+   "method": "thermochemistry +3.6",
    "rank_of_truth": 0,
    "n_cand": 4
   },
@@ -1410,8 +1410,8 @@
    "verdict": "OK",
    "got": "[CH]=CCC",
    "truth": "[CH]=CCC",
-   "conf": 0.941,
-   "method": "thermochemistry +3.9",
+   "conf": 0.952,
+   "method": "thermochemistry +4.0",
    "rank_of_truth": 0,
    "n_cand": 18
   },
@@ -1421,8 +1421,8 @@
    "verdict": "OK",
    "got": "C=[C]CC",
    "truth": "C=[C]CC",
-   "conf": 0.97,
-   "method": "thermochemistry +1.7, structure plausibility +1.5, reactions +1.5 from 1 witness reaction",
+   "conf": 0.96,
+   "method": "reactions +7.5 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 18
   },
@@ -1443,7 +1443,7 @@
    "verdict": "OK",
    "got": "C=CC[CH2]",
    "truth": "[CH2]CC=C",
-   "conf": 0.971,
+   "conf": 0.987,
    "method": "thermochemistry +4.7",
    "rank_of_truth": 0,
    "n_cand": 18
@@ -1454,8 +1454,8 @@
    "verdict": "OK",
    "got": "C[C]=CC",
    "truth": "C[C]=CC",
-   "conf": 0.961,
-   "method": "thermochemistry +3.3",
+   "conf": 0.94,
+   "method": "thermochemistry +3.2",
    "rank_of_truth": 0,
    "n_cand": 18
   },
@@ -1465,8 +1465,8 @@
    "verdict": "OK",
    "got": "C=CC=C",
    "truth": "C=CC=C",
-   "conf": 0.993,
-   "method": "thermochemistry +3.5, structure plausibility +2.5",
+   "conf": 0.996,
+   "method": "thermochemistry +3.7, structure plausibility +2.5",
    "rank_of_truth": 0,
    "n_cand": 30
   },
@@ -1476,8 +1476,8 @@
    "verdict": "OK",
    "got": "CCCCOO",
    "truth": "CCCCOO",
-   "conf": 1.0,
-   "method": "reactions +67.5 from 22 witness reactions, thermochemistry +3.3",
+   "conf": 0.903,
+   "method": "thermochemistry +3.4",
    "rank_of_truth": 0,
    "n_cand": 28
   },
@@ -1487,7 +1487,7 @@
    "verdict": "OK",
    "got": "CC(CC)OO",
    "truth": "CCC(C)OO",
-   "conf": 0.903,
+   "conf": 0.929,
    "method": "thermochemistry +3.5",
    "rank_of_truth": 0,
    "n_cand": 28
@@ -1498,8 +1498,8 @@
    "verdict": "OK",
    "got": "CCCCO[O]",
    "truth": "CCCCO[O]",
-   "conf": 0.999,
-   "method": "reactions +4.5 from 2 witness reactions, thermochemistry +3.7",
+   "conf": 0.919,
+   "method": "thermochemistry +3.4",
    "rank_of_truth": 0,
    "n_cand": 80
   },
@@ -1509,7 +1509,7 @@
    "verdict": "OK",
    "got": "CC(CC)O[O]",
    "truth": "CCC(C)O[O]",
-   "conf": 0.924,
+   "conf": 0.945,
    "method": "thermochemistry +3.5",
    "rank_of_truth": 0,
    "n_cand": 80
@@ -1521,7 +1521,7 @@
    "got": "CCCC[O]",
    "truth": "CCCC[O]",
    "conf": 1.0,
-   "method": "reactions +6.0 from 3 witness reactions, thermochemistry +3.0",
+   "method": "reactions +47.4 from 22 witness reactions, thermochemistry +3.0",
    "rank_of_truth": 0,
    "n_cand": 25
   },
@@ -1532,7 +1532,7 @@
    "got": "CC(CC)[O]",
    "truth": "CCC(C)[O]",
    "conf": 1.0,
-   "method": "reactions +24.8 from 12 witness reactions, thermochemistry +3.0",
+   "method": "reactions +50.4 from 23 witness reactions, thermochemistry +3.2",
    "rank_of_truth": 0,
    "n_cand": 25
   },
@@ -1542,7 +1542,7 @@
    "verdict": "OK",
    "got": "C=CC(C)[O]",
    "truth": "C=CC(C)[O]",
-   "conf": 0.996,
+   "conf": 0.997,
    "method": "thermochemistry +3.0, reactions +3.0 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 111
@@ -1553,8 +1553,8 @@
    "verdict": "OK",
    "got": "CCC1CO1",
    "truth": "CCC1CO1",
-   "conf": 0.99,
-   "method": "reactions +4.1 from 4 witness reactions, thermochemistry +3.0",
+   "conf": 0.997,
+   "method": "reactions +4.1 from 4 witness reactions, thermochemistry +3.0, entropy and heat capacity +1.2",
    "rank_of_truth": 0,
    "n_cand": 72
   },
@@ -1564,8 +1564,8 @@
    "verdict": "OK",
    "got": "CC1CCO1",
    "truth": "CC1CCO1",
-   "conf": 0.954,
-   "method": "thermochemistry +2.8, reactions +1.9 from 7 witness reactions",
+   "conf": 0.95,
+   "method": "entropy and heat capacity +3.9, thermochemistry +2.8",
    "rank_of_truth": 0,
    "n_cand": 72
   },
@@ -1575,8 +1575,8 @@
    "verdict": "OK",
    "got": "C1CCOC1",
    "truth": "C1CCOC1",
-   "conf": 0.983,
-   "method": "thermochemistry +3.5, reactions +2.2 from 6 witness reactions",
+   "conf": 0.996,
+   "method": "thermochemistry +4.7, structure plausibility +1.5",
    "rank_of_truth": 0,
    "n_cand": 72
   },
@@ -1586,8 +1586,8 @@
    "verdict": "OK",
    "got": "CC1C(C)O1",
    "truth": "CC1OC1C",
-   "conf": 0.971,
-   "method": "reactions +4.5 from 3 witness reactions, thermochemistry +1.8",
+   "conf": 0.989,
+   "method": "reactions +3.8 from 2 witness reactions, thermochemistry +2.8",
    "rank_of_truth": 0,
    "n_cand": 72
   },
@@ -1597,7 +1597,7 @@
    "verdict": "OK",
    "got": "CC[CH]CO",
    "truth": "CC[CH]CO",
-   "conf": 0.881,
+   "conf": 0.914,
    "method": "thermochemistry +2.3",
    "rank_of_truth": 0,
    "n_cand": 25
@@ -1608,7 +1608,7 @@
    "verdict": "OK",
    "got": "C[CH]C(C)O",
    "truth": "C[CH]C(C)O",
-   "conf": 0.986,
+   "conf": 0.99,
    "method": "thermochemistry +3.1, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 25
@@ -1619,7 +1619,7 @@
    "verdict": "OK",
    "got": "CCC(CO)O[O]",
    "truth": "CCC(CO)O[O]",
-   "conf": 0.98,
+   "conf": 0.984,
    "method": "reactions +3.0 from 2 witness reactions, thermochemistry +2.6",
    "rank_of_truth": 0,
    "n_cand": 94
@@ -1630,9 +1630,9 @@
    "verdict": "WRONG",
    "got": "CC(C(C)O)O[O]",
    "truth": "CCC(C)(O)O[O]",
-   "conf": 0.983,
-   "method": "reactions +3.0 from 2 witness reactions, thermochemistry +3.0",
-   "rank_of_truth": 5,
+   "conf": 0.987,
+   "method": "reactions +3.4 from 2 witness reactions, thermochemistry +2.7",
+   "rank_of_truth": 4,
    "n_cand": 86
   },
   {
@@ -1641,7 +1641,7 @@
    "verdict": "OK",
    "got": "CCC[CH]OO",
    "truth": "CCC[CH]OO",
-   "conf": 0.99,
+   "conf": 0.997,
    "method": "thermochemistry +3.2, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 84
@@ -1652,10 +1652,10 @@
    "verdict": "OK",
    "got": "CC[CH]COO",
    "truth": "CC[CH]COO",
-   "conf": 0.955,
-   "method": "thermochemistry +3.5",
+   "conf": 0.992,
+   "method": "reactions +3.0 from 2 witness reactions, thermochemistry +2.7",
    "rank_of_truth": 0,
-   "n_cand": 80
+   "n_cand": 83
   },
   {
    "name": "C4H8OOH1-3",
@@ -1663,8 +1663,8 @@
    "verdict": "OK",
    "got": "C[CH]CCOO",
    "truth": "C[CH]CCOO",
-   "conf": 0.904,
-   "method": "thermochemistry +3.1, reactions +0.8 from 2 witness reactions",
+   "conf": 0.916,
+   "method": "thermochemistry +2.8, reactions +0.8 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 84
   },
@@ -1674,8 +1674,8 @@
    "verdict": "OK",
    "got": "[CH2]CCCOO",
    "truth": "[CH2]CCCOO",
-   "conf": 0.997,
-   "method": "thermochemistry +3.6, reactions +3.0 from 2 witness reactions",
+   "conf": 0.995,
+   "method": "thermochemistry +3.1, reactions +3.0 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 86
   },
@@ -1685,7 +1685,7 @@
    "verdict": "OK",
    "got": "[CH2]C(CC)OO",
    "truth": "[CH2]C(CC)OO",
-   "conf": 0.916,
+   "conf": 0.921,
    "method": "reactions +3.0 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 82
@@ -1696,10 +1696,10 @@
    "verdict": "OK",
    "got": "C[C](CC)OO",
    "truth": "CC[C](C)OO",
-   "conf": 0.998,
-   "method": "reactions +4.5 from 1 witness reaction, thermochemistry +3.5",
+   "conf": 0.95,
+   "method": "thermochemistry +5.2",
    "rank_of_truth": 0,
-   "n_cand": 81
+   "n_cand": 80
   },
   {
    "name": "C4H8OOH2-3",
@@ -1707,7 +1707,7 @@
    "verdict": "OK",
    "got": "C[CH]C(C)OO",
    "truth": "C[CH]C(C)OO",
-   "conf": 0.992,
+   "conf": 0.994,
    "method": "thermochemistry +3.1, reactions +3.0 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 82
@@ -1718,8 +1718,8 @@
    "verdict": "OK",
    "got": "[CH2]CC(C)OO",
    "truth": "[CH2]CC(C)OO",
-   "conf": 0.996,
-   "method": "reactions +5.2 from 3 witness reactions, thermochemistry +1.8",
+   "conf": 0.997,
+   "method": "reactions +5.2 from 3 witness reactions, thermochemistry +1.9",
    "rank_of_truth": 0,
    "n_cand": 84
   },
@@ -1729,7 +1729,7 @@
    "verdict": "OK",
    "got": "CCC(COO)O[O]",
    "truth": "CCC(COO)O[O]",
-   "conf": 0.903,
+   "conf": 0.908,
    "method": "reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 88
@@ -1740,7 +1740,7 @@
    "verdict": "OK",
    "got": "CC(CCOO)O[O]",
    "truth": "CC(CCOO)O[O]",
-   "conf": 0.904,
+   "conf": 0.906,
    "method": "reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 88
@@ -1751,7 +1751,7 @@
    "verdict": "OK",
    "got": "[O]OCCCCOO",
    "truth": "[O]OCCCCOO",
-   "conf": 0.997,
+   "conf": 0.998,
    "method": "thermochemistry +3.8, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 86
@@ -1762,8 +1762,8 @@
    "verdict": "OK",
    "got": "CCC(CO[O])OO",
    "truth": "CCC(CO[O])OO",
-   "conf": 0.7,
-   "method": "thermochemistry +1.0",
+   "conf": 0.8,
+   "method": "thermochemistry +1.0, entropy and heat capacity +0.6",
    "rank_of_truth": 0,
    "n_cand": 115
   },
@@ -1773,7 +1773,7 @@
    "verdict": "OK",
    "got": "CC(C(C)OO)O[O]",
    "truth": "CC(O[O])C(C)OO",
-   "conf": 0.981,
+   "conf": 0.984,
    "method": "thermochemistry +4.1",
    "rank_of_truth": 0,
    "n_cand": 111
@@ -1784,10 +1784,10 @@
    "verdict": "OK",
    "got": "CC(CCO[O])OO",
    "truth": "CC(CCO[O])OO",
-   "conf": 0.938,
-   "method": "reactions +3.0 from 1 witness reaction, thermochemistry +0.8",
+   "conf": 0.89,
+   "method": "thermochemistry +1.7, entropy and heat capacity +0.6",
    "rank_of_truth": 0,
-   "n_cand": 88
+   "n_cand": 115
   },
   {
    "name": "NC4KET12",
@@ -1795,7 +1795,7 @@
    "verdict": "OK",
    "got": "CCC(C=O)OO",
    "truth": "CCC(C=O)OO",
-   "conf": 0.972,
+   "conf": 0.964,
    "method": "thermochemistry +3.0, reactions +2.6 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 110
@@ -1806,8 +1806,8 @@
    "verdict": "OK",
    "got": "CC(CC=O)OO",
    "truth": "CC(CC=O)OO",
-   "conf": 0.922,
-   "method": "thermochemistry +3.2, reactions +0.8 from 2 witness reactions",
+   "conf": 0.964,
+   "method": "thermochemistry +2.7, reactions +2.2 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 122
   },
@@ -1817,7 +1817,7 @@
    "verdict": "OK",
    "got": "O=CCCCOO",
    "truth": "O=CCCCOO",
-   "conf": 0.927,
+   "conf": 0.948,
    "method": "thermochemistry +2.8, reactions +2.2 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 117
@@ -1828,8 +1828,8 @@
    "verdict": "OK",
    "got": "CCC(COO)=O",
    "truth": "CCC(=O)COO",
-   "conf": 0.907,
-   "method": "thermochemistry +2.9, reactions +0.8 from 1 witness reaction",
+   "conf": 0.925,
+   "method": "thermochemistry +3.2, reactions +1.1 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 90
   },
@@ -1839,8 +1839,8 @@
    "verdict": "OK",
    "got": "CC(C(C)OO)=O",
    "truth": "CC(=O)C(C)OO",
-   "conf": 0.939,
-   "method": "thermochemistry +3.4, reactions +1.1 from 1 witness reaction",
+   "conf": 0.954,
+   "method": "thermochemistry +4.0, reactions +0.8 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 90
   },
@@ -1850,10 +1850,10 @@
    "verdict": "OK",
    "got": "CC(CCOO)=O",
    "truth": "CC(=O)CCOO",
-   "conf": 0.975,
-   "method": "thermochemistry +3.1, reactions +1.9 from 2 witness reactions",
+   "conf": 0.935,
+   "method": "thermochemistry +3.0, reactions +0.8 from 1 witness reaction",
    "rank_of_truth": 0,
-   "n_cand": 119
+   "n_cand": 98
   },
   {
    "name": "C2H5COCH3",
@@ -1861,8 +1861,8 @@
    "verdict": "OK",
    "got": "CC(CC)=O",
    "truth": "CCC(C)=O",
-   "conf": 0.99,
-   "method": "thermochemistry +3.1, structure plausibility +2.5",
+   "conf": 0.994,
+   "method": "thermochemistry +5.9",
    "rank_of_truth": 0,
    "n_cand": 72
   },
@@ -1872,8 +1872,8 @@
    "verdict": "OK",
    "got": "C=C(CC)[O]",
    "truth": "[CH2]C(=O)CC",
-   "conf": 1.0,
-   "method": "thermochemistry +4.9, reactions +3.0 from 11 witness reactions",
+   "conf": 0.999,
+   "method": "uniqueness +6.0, reactions +3.0 from 11 witness reactions, thermochemistry +2.0",
    "rank_of_truth": 0,
    "n_cand": 94
   },
@@ -1883,10 +1883,10 @@
    "verdict": "OK",
    "got": "[CH2]CC(C)=O",
    "truth": "[CH2]CC(C)=O",
-   "conf": 1.0,
-   "method": "thermochemistry +6.4, reactions +3.0 from 11 witness reactions",
+   "conf": 0.943,
+   "method": "thermochemistry +3.1, entropy and heat capacity +1.0",
    "rank_of_truth": 0,
-   "n_cand": 88
+   "n_cand": 80
   },
   {
    "name": "CH3CHCOCH3",
@@ -1894,8 +1894,8 @@
    "verdict": "OK",
    "got": "CC(=CC)[O]",
    "truth": "CC=C(C)[O]",
-   "conf": 0.904,
-   "method": "thermochemistry +3.5",
+   "conf": 0.935,
+   "method": "thermochemistry +3.6",
    "rank_of_truth": 0,
    "n_cand": 80
   },
@@ -1905,8 +1905,8 @@
    "verdict": "OK",
    "got": "C=CC(C)=O",
    "truth": "C=CC(C)=O",
-   "conf": 0.91,
-   "method": "thermochemistry +3.6",
+   "conf": 0.926,
+   "method": "thermochemistry +3.8",
    "rank_of_truth": 0,
    "n_cand": 80
   },
@@ -1916,7 +1916,7 @@
    "verdict": "OK",
    "got": "CC(C(C)O[O])=O",
    "truth": "CC(=O)C(C)O[O]",
-   "conf": 0.991,
+   "conf": 0.967,
    "method": "thermochemistry +3.1, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 117
@@ -1927,10 +1927,10 @@
    "verdict": "OK",
    "got": "[CH2]C(C(C)=O)OO",
    "truth": "[CH2]C(OO)C(C)=O",
-   "conf": 0.936,
-   "method": "thermochemistry +3.1",
+   "conf": 0.965,
+   "method": "thermochemistry +3.1, reactions +1.5 from 2 witness reactions",
    "rank_of_truth": 0,
-   "n_cand": 134
+   "n_cand": 169
   },
   {
    "name": "NC3H7CHO",
@@ -1938,8 +1938,8 @@
    "verdict": "OK",
    "got": "CCCC=O",
    "truth": "CCCC=O",
-   "conf": 0.92,
-   "method": "thermochemistry +3.3",
+   "conf": 1.0,
+   "method": "thermochemistry +8.3, structure plausibility +6.0",
    "rank_of_truth": 0,
    "n_cand": 72
   },
@@ -1949,10 +1949,10 @@
    "verdict": "OK",
    "got": "CCC[C]=O",
    "truth": "CCC[C]=O",
-   "conf": 0.999,
-   "method": "thermochemistry +3.7, reactions +3.0 from 9 witness reactions",
+   "conf": 0.996,
+   "method": "thermochemistry +3.2, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
-   "n_cand": 83
+   "n_cand": 82
   },
   {
    "name": "C3H6CHO-1",
@@ -1960,10 +1960,10 @@
    "verdict": "OK",
    "got": "[CH2]CCC=O",
    "truth": "[CH2]CCC=O",
-   "conf": 0.999,
-   "method": "thermochemistry +3.6, reactions +3.0 from 4 witness reactions",
+   "conf": 0.995,
+   "method": "thermochemistry +6.6",
    "rank_of_truth": 0,
-   "n_cand": 92
+   "n_cand": 91
   },
   {
    "name": "C3H6CHO-2",
@@ -1971,10 +1971,10 @@
    "verdict": "OK",
    "got": "C[CH]CC=O",
    "truth": "C[CH]CC=O",
-   "conf": 0.998,
-   "method": "thermochemistry +3.6, reactions +3.0 from 4 witness reactions",
+   "conf": 0.903,
+   "method": "thermochemistry +3.1",
    "rank_of_truth": 0,
-   "n_cand": 92
+   "n_cand": 80
   },
   {
    "name": "C3H6CHO-3",
@@ -1982,8 +1982,8 @@
    "verdict": "OK",
    "got": "CCC=C[O]",
    "truth": "CC[CH]C=O",
-   "conf": 0.999,
-   "method": "thermochemistry +3.7, reactions +3.0 from 4 witness reactions",
+   "conf": 0.98,
+   "method": "thermochemistry +4.2",
    "rank_of_truth": 0,
    "n_cand": 103
   },
@@ -1993,19 +1993,19 @@
    "verdict": "OK",
    "got": "CCC=C=O",
    "truth": "CCC=C=O",
-   "conf": 0.995,
-   "method": "structure plausibility +5.5, thermochemistry +3.1",
+   "conf": 0.967,
+   "method": "structure plausibility +5.5, thermochemistry +3.2",
    "rank_of_truth": 0,
-   "n_cand": 87
+   "n_cand": 117
   },
   {
    "name": "SC3H5CHO",
    "formula": "C4H6O",
-   "verdict": "open",
-   "got": null,
+   "verdict": "OK",
+   "got": "CC=CC=O",
    "truth": "CC=CC=O",
-   "conf": 0.0,
-   "method": "",
+   "conf": 0.999,
+   "method": "structure plausibility +6.0, thermochemistry +1.3",
    "rank_of_truth": 0,
    "n_cand": 121
   },
@@ -2015,7 +2015,7 @@
    "verdict": "OK",
    "got": "CC=C[C]=O",
    "truth": "CC=C[C]=O",
-   "conf": 0.942,
+   "conf": 0.947,
    "method": "thermochemistry +3.3, structure plausibility +0.5",
    "rank_of_truth": 0,
    "n_cand": 80
@@ -2026,8 +2026,8 @@
    "verdict": "OK",
    "got": "[CH2]CC=O",
    "truth": "[CH2]CC=O",
-   "conf": 0.974,
-   "method": "thermochemistry +3.0, structure plausibility +1.0",
+   "conf": 0.987,
+   "method": "structure plausibility +4.0, thermochemistry +3.0",
    "rank_of_truth": 0,
    "n_cand": 38
   },
@@ -2037,8 +2037,8 @@
    "verdict": "OK",
    "got": "CC(C)C",
    "truth": "CC(C)C",
-   "conf": 0.967,
-   "method": "thermochemistry +3.4",
+   "conf": 0.989,
+   "method": "thermochemistry +3.4, entropy and heat capacity +1.1",
    "rank_of_truth": 0,
    "n_cand": 2
   },
@@ -2048,8 +2048,8 @@
    "verdict": "OK",
    "got": "[CH2]C(C)C",
    "truth": "[CH2]C(C)C",
-   "conf": 0.918,
-   "method": "thermochemistry +3.1",
+   "conf": 0.983,
+   "method": "thermochemistry +3.1, entropy and heat capacity +1.4",
    "rank_of_truth": 0,
    "n_cand": 4
   },
@@ -2059,7 +2059,7 @@
    "verdict": "OK",
    "got": "C[C](C)C",
    "truth": "C[C](C)C",
-   "conf": 0.96,
+   "conf": 0.974,
    "method": "thermochemistry +3.7",
    "rank_of_truth": 0,
    "n_cand": 4
@@ -2070,7 +2070,7 @@
    "verdict": "OK",
    "got": "C=C(C)C",
    "truth": "C=C(C)C",
-   "conf": 0.948,
+   "conf": 0.96,
    "method": "thermochemistry +3.2",
    "rank_of_truth": 0,
    "n_cand": 11
@@ -2081,8 +2081,8 @@
    "verdict": "OK",
    "got": "C=C([CH2])C",
    "truth": "[CH2]C(=C)C",
-   "conf": 0.908,
-   "method": "thermochemistry +2.3",
+   "conf": 0.999,
+   "method": "thermochemistry +7.6",
    "rank_of_truth": 0,
    "n_cand": 18
   },
@@ -2092,7 +2092,7 @@
    "verdict": "OK",
    "got": "CC(C)(C)O[O]",
    "truth": "CC(C)(C)O[O]",
-   "conf": 0.969,
+   "conf": 0.984,
    "method": "thermochemistry +4.5",
    "rank_of_truth": 0,
    "n_cand": 80
@@ -2103,7 +2103,7 @@
    "verdict": "OK",
    "got": "CC(CO[O])C",
    "truth": "CC(C)CO[O]",
-   "conf": 0.904,
+   "conf": 0.926,
    "method": "thermochemistry +3.4",
    "rank_of_truth": 0,
    "n_cand": 80
@@ -2114,7 +2114,7 @@
    "verdict": "OK",
    "got": "[CH2]C(C)(C)OO",
    "truth": "[CH2]C(C)(C)OO",
-   "conf": 0.989,
+   "conf": 0.99,
    "method": "thermochemistry +3.2, reactions +1.5 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 80
@@ -2125,7 +2125,7 @@
    "verdict": "OK",
    "got": "[CH2]C(COO)C",
    "truth": "[CH2]C(C)COO",
-   "conf": 0.998,
+   "conf": 0.995,
    "method": "reactions +3.8 from 3 witness reactions, thermochemistry +2.7",
    "rank_of_truth": 0,
    "n_cand": 82
@@ -2136,8 +2136,8 @@
    "verdict": "OK",
    "got": "C[C](COO)C",
    "truth": "C[C](C)COO",
-   "conf": 0.984,
-   "method": "thermochemistry +3.0, reactions +1.5 from 2 witness reactions",
+   "conf": 0.999,
+   "method": "thermochemistry +3.6, reactions +3.0 from 2 witness reactions, entropy and heat capacity +1.0",
    "rank_of_truth": 0,
    "n_cand": 81
   },
@@ -2147,7 +2147,7 @@
    "verdict": "OK",
    "got": "[CH2]C(C[O])C",
    "truth": "[CH2]C(C)C[O]",
-   "conf": 0.907,
+   "conf": 0.84,
    "method": "thermochemistry +6.3, uniqueness +6.0",
    "rank_of_truth": 0,
    "n_cand": 72
@@ -2158,9 +2158,9 @@
    "verdict": "WRONG",
    "got": "CC1COC1",
    "truth": "CC1CCO1",
-   "conf": 0.825,
-   "method": "thermochemistry +2.7",
-   "rank_of_truth": 21,
+   "conf": 0.947,
+   "method": "thermochemistry +3.1",
+   "rank_of_truth": 1,
    "n_cand": 72
   },
   {
@@ -2169,8 +2169,8 @@
    "verdict": "OK",
    "got": "CC(C[O])C",
    "truth": "CC(C)C[O]",
-   "conf": 1.0,
-   "method": "reactions +22.3 from 18 witness reactions, thermochemistry +8.1",
+   "conf": 0.949,
+   "method": "thermochemistry +5.1",
    "rank_of_truth": 0,
    "n_cand": 25
   },
@@ -2180,8 +2180,8 @@
    "verdict": "OK",
    "got": "CC(C)(C)[O]",
    "truth": "CC(C)(C)[O]",
-   "conf": 1.0,
-   "method": "reactions +22.3 from 12 witness reactions, thermochemistry +3.1",
+   "conf": 0.994,
+   "method": "entropy and heat capacity +4.2, thermochemistry +3.6",
    "rank_of_truth": 0,
    "n_cand": 25
   },
@@ -2192,7 +2192,7 @@
    "got": "CC(COO)C",
    "truth": "CC(C)COO",
    "conf": 1.0,
-   "method": "reactions +63.0 from 21 witness reactions, thermochemistry +3.4",
+   "method": "reactions +61.5 from 20 witness reactions, thermochemistry +3.4",
    "rank_of_truth": 0,
    "n_cand": 28
   },
@@ -2202,8 +2202,8 @@
    "verdict": "OK",
    "got": "CC(C)(C)OO",
    "truth": "CC(C)(C)OO",
-   "conf": 0.955,
-   "method": "thermochemistry +3.8",
+   "conf": 0.994,
+   "method": "thermochemistry +4.7, entropy and heat capacity +0.7",
    "rank_of_truth": 0,
    "n_cand": 28
   },
@@ -2213,8 +2213,8 @@
    "verdict": "OK",
    "got": "C=C(C[O])C",
    "truth": "C=C(C)C[O]",
-   "conf": 1.0,
-   "method": "reactions +4.5 from 3 witness reactions, thermochemistry +3.3, structure plausibility +1.5",
+   "conf": 0.969,
+   "method": "thermochemistry +4.1",
    "rank_of_truth": 0,
    "n_cand": 93
   },
@@ -2224,8 +2224,8 @@
    "verdict": "OK",
    "got": "C[C](CO)C",
    "truth": "C[C](C)CO",
-   "conf": 0.994,
-   "method": "reactions +3.0 from 2 witness reactions, thermochemistry +2.2",
+   "conf": 0.987,
+   "method": "entropy and heat capacity +2.9, thermochemistry +2.2",
    "rank_of_truth": 0,
    "n_cand": 25
   },
@@ -2246,7 +2246,7 @@
    "verdict": "OK",
    "got": "CC(C=O)C",
    "truth": "CC(C)C=O",
-   "conf": 0.929,
+   "conf": 0.936,
    "method": "thermochemistry +3.1",
    "rank_of_truth": 0,
    "n_cand": 72
@@ -2257,10 +2257,10 @@
    "verdict": "OK",
    "got": "CC(=C[O])C",
    "truth": "C[C](C)C=O",
-   "conf": 0.955,
-   "method": "thermochemistry +3.1",
+   "conf": 0.923,
+   "method": "thermochemistry +3.1, structure plausibility +1.0",
    "rank_of_truth": 0,
-   "n_cand": 92
+   "n_cand": 80
   },
   {
    "name": "IC3H7CO",
@@ -2268,8 +2268,8 @@
    "verdict": "OK",
    "got": "CC([C]=O)C",
    "truth": "CC(C)[C]=O",
-   "conf": 0.99,
-   "method": "reactions +3.0 from 7 witness reactions, thermochemistry +1.6",
+   "conf": 1.0,
+   "method": "thermochemistry +6.8, reactions +3.0 from 7 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 82
   },
@@ -2290,7 +2290,7 @@
    "verdict": "OK",
    "got": "CC(CO[O])(C)OO",
    "truth": "CC(C)(CO[O])OO",
-   "conf": 0.936,
+   "conf": 0.938,
    "method": "reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 85
@@ -2301,10 +2301,10 @@
    "verdict": "OK",
    "got": "CC(CO[O])COO",
    "truth": "CC(CO[O])COO",
-   "conf": 0.989,
-   "method": "thermochemistry +4.8",
+   "conf": 0.999,
+   "method": "reactions +4.5 from 2 witness reactions, thermochemistry +3.5",
    "rank_of_truth": 0,
-   "n_cand": 86
+   "n_cand": 91
   },
   {
    "name": "IC4H8OOH-TO2",
@@ -2312,10 +2312,10 @@
    "verdict": "OK",
    "got": "CC(COO)(C)O[O]",
    "truth": "CC(C)(COO)O[O]",
-   "conf": 0.944,
-   "method": "reactions +3.0 from 1 witness reaction",
+   "conf": 0.932,
+   "method": "reactions +3.0 from 2 witness reactions",
    "rank_of_truth": 0,
-   "n_cand": 86
+   "n_cand": 98
   },
   {
    "name": "IC4KETII",
@@ -2323,8 +2323,8 @@
    "verdict": "OK",
    "got": "CC(C=O)COO",
    "truth": "CC(C=O)COO",
-   "conf": 0.92,
-   "method": "thermochemistry +3.3, reactions +1.5 from 2 witness reactions",
+   "conf": 0.935,
+   "method": "thermochemistry +3.2, reactions +1.5 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 106
   },
@@ -2334,10 +2334,10 @@
    "verdict": "OK",
    "got": "CC(C=O)(C)OO",
    "truth": "CC(C)(C=O)OO",
-   "conf": 0.962,
-   "method": "thermochemistry +2.8, reactions +2.2 from 2 witness reactions",
+   "conf": 0.944,
+   "method": "thermochemistry +3.5, reactions +1.1 from 1 witness reaction",
    "rank_of_truth": 0,
-   "n_cand": 102
+   "n_cand": 89
   },
   {
    "name": "IC4H7OH",
@@ -2345,8 +2345,8 @@
    "verdict": "OK",
    "got": "C=C(CO)C",
    "truth": "C=C(C)CO",
-   "conf": 0.996,
-   "method": "thermochemistry +3.1, structure plausibility +2.5, reactions +1.5 from 1 witness reaction",
+   "conf": 0.992,
+   "method": "reactions +3.0 from 1 witness reaction, thermochemistry +2.8",
    "rank_of_truth": 0,
    "n_cand": 72
   },
@@ -2357,9 +2357,9 @@
    "got": "C=C([CH2])CO",
    "truth": "[CH2]C(=C)CO",
    "conf": 1.0,
-   "method": "thermochemistry +8.2",
+   "method": "thermochemistry +8.2, reactions +3.6 from 9 witness reactions",
    "rank_of_truth": 0,
-   "n_cand": 96
+   "n_cand": 98
   },
   {
    "name": "IC3H5CHO",
@@ -2367,10 +2367,10 @@
    "verdict": "OK",
    "got": "C=C(C=O)C",
    "truth": "C=C(C)C=O",
-   "conf": 1.0,
-   "method": "reactions +5.2 from 2 witness reactions, thermochemistry +2.7, structure plausibility +0.5",
+   "conf": 0.961,
+   "method": "thermochemistry +2.7, structure plausibility +0.5",
    "rank_of_truth": 0,
-   "n_cand": 88
+   "n_cand": 95
   },
   {
    "name": "IC3H5CO",
@@ -2379,7 +2379,7 @@
    "got": "C=C([C]=O)C",
    "truth": "C=C(C)[C]=O",
    "conf": 0.996,
-   "method": "thermochemistry +3.4, reactions +3.0 from 1 witness reaction",
+   "method": "thermochemistry +3.5, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 96
   },
@@ -2389,10 +2389,10 @@
    "verdict": "OK",
    "got": "CC(C=O)(C)[O]",
    "truth": "CC(C)([O])C=O",
-   "conf": 0.972,
-   "method": "thermochemistry +5.6",
+   "conf": 1.0,
+   "method": "thermochemistry +3.4, structure plausibility +3.0, reactions +3.0 from 2 witness reactions",
    "rank_of_truth": 0,
-   "n_cand": 99
+   "n_cand": 101
   },
   {
    "name": "IC3H6CO",
@@ -2400,10 +2400,10 @@
    "verdict": "OK",
    "got": "CC(=C=O)C",
    "truth": "CC(C)=C=O",
-   "conf": 0.997,
-   "method": "reactions +5.2 from 3 witness reactions, thermochemistry +1.7",
+   "conf": 0.999,
+   "method": "reactions +5.2 from 4 witness reactions, thermochemistry +1.7",
    "rank_of_truth": 0,
-   "n_cand": 86
+   "n_cand": 96
   },
   {
    "name": "IC4H7OOH",
@@ -2411,7 +2411,7 @@
    "verdict": "OK",
    "got": "C=C(COO)C",
    "truth": "C=C(C)COO",
-   "conf": 0.993,
+   "conf": 0.995,
    "method": "reactions +3.0 from 1 witness reaction, thermochemistry +2.9",
    "rank_of_truth": 0,
    "n_cand": 108
@@ -2422,10 +2422,10 @@
    "verdict": "OK",
    "got": "CC(C=O)(C)O",
    "truth": "CC(C)(O)C=O",
-   "conf": 0.988,
-   "method": "thermochemistry +3.0, reactions +3.0 from 1 witness reaction",
+   "conf": 1.0,
+   "method": "reactions +7.5 from 2 witness reactions, thermochemistry +3.0",
    "rank_of_truth": 0,
-   "n_cand": 84
+   "n_cand": 102
   },
   {
    "name": "TC3H6OH",
@@ -2433,7 +2433,7 @@
    "verdict": "OK",
    "got": "C[C](C)O",
    "truth": "C[C](C)O",
-   "conf": 0.988,
+   "conf": 0.992,
    "method": "thermochemistry +5.6",
    "rank_of_truth": 0,
    "n_cand": 10
@@ -2444,7 +2444,7 @@
    "verdict": "OK",
    "got": "C=C(C)O",
    "truth": "C=C(C)O",
-   "conf": 0.944,
+   "conf": 0.923,
    "method": "thermochemistry +3.3",
    "rank_of_truth": 0,
    "n_cand": 23
@@ -2455,7 +2455,7 @@
    "verdict": "OK",
    "got": "CC(C=O)(C)O[O]",
    "truth": "CC(C)(C=O)O[O]",
-   "conf": 0.987,
+   "conf": 0.985,
    "method": "reactions +3.0 from 1 witness reaction, thermochemistry +2.9",
    "rank_of_truth": 0,
    "n_cand": 104
@@ -2466,8 +2466,8 @@
    "verdict": "OK",
    "got": "CC([C]=O)(C)OO",
    "truth": "CC(C)([C]=O)OO",
-   "conf": 0.96,
-   "method": "thermochemistry +4.3, reactions +0.8 from 2 witness reactions",
+   "conf": 0.78,
+   "method": "thermochemistry +4.2, reactions +1.1 from 2 witness reactions",
    "rank_of_truth": 0,
    "n_cand": 120
   },
@@ -2477,10 +2477,10 @@
    "verdict": "OK",
    "got": "[CH2]C(C=O)(C)OO",
    "truth": "[CH2]C(C)(C=O)OO",
-   "conf": 0.908,
-   "method": "thermochemistry +3.1",
+   "conf": 0.929,
+   "method": "thermochemistry +3.1, reactions +1.5 from 2 witness reactions",
    "rank_of_truth": 0,
-   "n_cand": 129
+   "n_cand": 151
   },
   {
    "name": "CH2CCH2OH",
@@ -2488,7 +2488,7 @@
    "verdict": "OK",
    "got": "C=[C]CO",
    "truth": "C=[C]CO",
-   "conf": 0.949,
+   "conf": 0.905,
    "method": "thermochemistry +2.9",
    "rank_of_truth": 0,
    "n_cand": 38
@@ -2499,8 +2499,8 @@
    "verdict": "OK",
    "got": "[CH2]C(C=O)(C)C",
    "truth": "[CH2]C(C)(C)C=O",
-   "conf": 0.961,
-   "method": "thermochemistry +3.7",
+   "conf": 0.985,
+   "method": "thermochemistry +3.7, entropy and heat capacity +1.5",
    "rank_of_truth": 0,
    "n_cand": 94
   },
@@ -2510,8 +2510,8 @@
    "verdict": "OK",
    "got": "CC(C=O)(CO[O])C",
    "truth": "CC(C)(C=O)CO[O]",
-   "conf": 0.994,
-   "method": "thermochemistry +3.1, reactions +3.0 from 1 witness reaction",
+   "conf": 0.996,
+   "method": "thermochemistry +3.5, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 41
   },
@@ -2521,8 +2521,8 @@
    "verdict": "OK",
    "got": "CC([C]=O)(COO)C",
    "truth": "CC(C)([C]=O)COO",
-   "conf": 0.991,
-   "method": "thermochemistry +3.1, reactions +3.0 from 1 witness reaction",
+   "conf": 0.997,
+   "method": "thermochemistry +3.2, reactions +3.0 from 1 witness reaction",
    "rank_of_truth": 0,
    "n_cand": 12
   },
@@ -2532,7 +2532,7 @@
    "verdict": "OK",
    "got": "C=CCO",
    "truth": "C=CCO",
-   "conf": 0.96,
+   "conf": 0.961,
    "method": "thermochemistry +3.3",
    "rank_of_truth": 0,
    "n_cand": 23
@@ -2543,8 +2543,8 @@
    "verdict": "OK",
    "got": "[CH2]C(COO)(C)OO",
    "truth": "[CH2]C(C)(COO)OO",
-   "conf": 0.994,
-   "method": "reactions +3.0 from 3 witness reactions, thermochemistry +2.9",
+   "conf": 0.997,
+   "method": "reactions +3.0 from 3 witness reactions, thermochemistry +3.0, entropy and heat capacity +0.7",
    "rank_of_truth": 0,
    "n_cand": 103
   },
@@ -2554,10 +2554,10 @@
    "verdict": "OK",
    "got": "C[C](COO)COO",
    "truth": "C[C](COO)COO",
-   "conf": 0.945,
-   "method": "thermochemistry +3.1",
+   "conf": 0.999,
+   "method": "reactions +4.5 from 2 witness reactions, thermochemistry +3.1, entropy and heat capacity +0.7",
    "rank_of_truth": 0,
-   "n_cand": 96
+   "n_cand": 100
   },
   {
    "name": "IIC4H7Q2-I",
@@ -2565,7 +2565,7 @@
    "verdict": "OK",
    "got": "[CH2]C(COO)COO",
    "truth": "[CH2]C(COO)COO",
-   "conf": 0.975,
+   "conf": 0.979,
    "method": "thermochemistry +5.0",
    "rank_of_truth": 0,
    "n_cand": 104
@@ -2576,7 +2576,7 @@
    "verdict": "OK",
    "got": "[CH2]OO",
    "truth": "[CH2]OO",
-   "conf": 0.999,
+   "conf": 1.0,
    "method": "thermochemistry +8.3",
    "rank_of_truth": 0,
    "n_cand": 4
@@ -2587,8 +2587,8 @@
    "verdict": "OK",
    "got": "C#CC=C",
    "truth": "[CH]=C=C[CH2]",
-   "conf": 0.997,
-   "method": "thermochemistry +4.2, structure plausibility +2.5",
+   "conf": 0.999,
+   "method": "structure plausibility +5.5, thermochemistry +3.0",
    "rank_of_truth": 0,
    "n_cand": 40
   },
@@ -2598,8 +2598,8 @@
    "verdict": "OK",
    "got": "C#C[C]=C",
    "truth": "C#C[C]=C",
-   "conf": 0.954,
-   "method": "thermochemistry +4.2",
+   "conf": 0.996,
+   "method": "thermochemistry +3.8, structure plausibility +3.0",
    "rank_of_truth": 0,
    "n_cand": 31
   },
@@ -2609,8 +2609,8 @@
    "verdict": "OK",
    "got": "C#CC=[CH]",
    "truth": "[CH]=CC#C",
-   "conf": 0.952,
-   "method": "thermochemistry +3.0",
+   "conf": 0.979,
+   "method": "thermochemistry +3.0, entropy and heat capacity +0.9",
    "rank_of_truth": 0,
    "n_cand": 31
   },
@@ -2632,7 +2632,7 @@
    "got": "C#CC#C",
    "truth": "C#CC#C",
    "conf": 1.0,
-   "method": "thermochemistry +8.3, structure plausibility +2.5",
+   "method": "thermochemistry +8.3, structure plausibility +4.0",
    "rank_of_truth": 0,
    "n_cand": 23
   },
@@ -2653,7 +2653,7 @@
    "verdict": "OK",
    "got": "[CH]=CC=C",
    "truth": "[CH]=CC=C",
-   "conf": 0.954,
+   "conf": 0.977,
    "method": "thermochemistry +3.8",
    "rank_of_truth": 0,
    "n_cand": 34
@@ -2666,8 +2666,8 @@
    "truth": "CC=C[C]=O",
    "conf": 0.0,
    "method": "",
-   "rank_of_truth": 1,
-   "n_cand": 134
+   "rank_of_truth": 3,
+   "n_cand": 113
   },
   {
    "name": "CH2CHCHCHO",
@@ -2675,8 +2675,8 @@
    "verdict": "OK",
    "got": "C=CC=C[O]",
    "truth": "[CH2]C=CC=O",
-   "conf": 0.996,
-   "method": "reactions +3.0 from 3 witness reactions, thermochemistry +3.0",
+   "conf": 0.997,
+   "method": "reactions +3.0 from 3 witness reactions, thermochemistry +3.0, entropy and heat capacity +0.6",
    "rank_of_truth": 0,
    "n_cand": 113
   },
@@ -2686,10 +2686,10 @@
    "verdict": "OK",
    "got": "C1=CCOC1",
    "truth": "C1=CCOC1",
-   "conf": 0.994,
-   "method": "thermochemistry +3.1, reactions +2.2 from 2 witness reactions",
+   "conf": 0.968,
+   "method": "thermochemistry +3.3, structure plausibility +0.5",
    "rank_of_truth": 0,
-   "n_cand": 89
+   "n_cand": 80
   },
   {
    "name": "C2H3CHOCH2",
@@ -2697,10 +2697,10 @@
    "verdict": "OK",
    "got": "C=CC1CO1",
    "truth": "C=CC1CO1",
-   "conf": 0.531,
-   "method": "thermochemistry +2.1, reactions +1.5 from 1 witness reaction",
+   "conf": 0.814,
+   "method": "reactions +4.5 from 2 witness reactions, thermochemistry +2.5",
    "rank_of_truth": 0,
-   "n_cand": 87
+   "n_cand": 126
   },
   {
    "name": "C4H5-2",
@@ -2708,9 +2708,9 @@
    "verdict": "WRONG",
    "got": "C=C=[C]C",
    "truth": "C=[C]C=C",
-   "conf": 0.939,
+   "conf": 0.973,
    "method": "thermochemistry +3.2, structure plausibility +0.5",
-   "rank_of_truth": 2,
+   "rank_of_truth": 3,
    "n_cand": 34
   },
   {
@@ -2719,7 +2719,7 @@
    "verdict": "OK",
    "got": "CC#CC",
    "truth": "CC#CC",
-   "conf": 0.962,
+   "conf": 0.969,
    "method": "thermochemistry +3.0, structure plausibility +1.5",
    "rank_of_truth": 0,
    "n_cand": 30
@@ -2730,21 +2730,21 @@
    "verdict": "OK",
    "got": "C1=COCC1",
    "truth": "C1=COCC1",
-   "conf": 0.874,
-   "method": "thermochemistry +2.1",
+   "conf": 0.968,
+   "method": "structure plausibility +1.5, entropy and heat capacity +1.2, thermochemistry +1.2",
    "rank_of_truth": 0,
-   "n_cand": 142
+   "n_cand": 102
   },
   {
    "name": "CH3CHCHCHO",
    "formula": "C4H6O",
-   "verdict": "OK",
-   "got": "CC=CC=O",
+   "verdict": "open",
+   "got": null,
    "truth": "CC=CC=O",
-   "conf": 0.96,
-   "method": "thermochemistry +3.2",
+   "conf": 0.0,
+   "method": "",
    "rank_of_truth": 0,
-   "n_cand": 114
+   "n_cand": 154
   },
   {
    "name": "C4H4O",
@@ -2752,8 +2752,8 @@
    "verdict": "OK",
    "got": "C1C=COC=1",
    "truth": "c1ccoc1",
-   "conf": 0.988,
-   "method": "thermochemistry +3.1, structure plausibility +3.0",
+   "conf": 0.994,
+   "method": "thermochemistry +5.5, structure plausibility +1.0",
    "rank_of_truth": 0,
    "n_cand": 80
   },
@@ -2763,7 +2763,7 @@
    "verdict": "WRONG",
    "got": "C#COC#C",
    "truth": "C=C=C=C=O",
-   "conf": 0.803,
+   "conf": 0.796,
    "method": "reactions +3.0 from 3 witness reactions, structure plausibility +1.5",
    "rank_of_truth": 1,
    "n_cand": 85

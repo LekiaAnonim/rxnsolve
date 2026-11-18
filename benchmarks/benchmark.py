@@ -28,13 +28,10 @@ MODELS = os.path.join(os.path.dirname(os.path.dirname(HERE)), "RMG-models")
 
 
 def find_inputs(folder: str):
-    """Read --species/--reactions/--thermo/--known from the folder's import.sh."""
-    path = os.path.join(MODELS, folder)
-    script = open(os.path.join(path, "import.sh")).read()
-    def arg(flag):
-        m = re.search(rf"--{flag}\s+(\S+)", script)
-        return os.path.join(path, m.group(1)) if m else None
-    return arg("reactions"), arg("thermo"), os.path.join(path, "SMILES.txt")
+    """Mechanism, thermo and SMILES.txt of a model folder (import.sh, with fallbacks)."""
+    from rxnsolve.thermo import find_model_inputs
+    inp = find_model_inputs(os.path.join(MODELS, folder))
+    return inp["chem"], inp["thermo"], os.path.join(MODELS, folder, "SMILES.txt")
 
 
 def main(argv=None):
@@ -103,9 +100,15 @@ def main(argv=None):
                          truth=truth_raw[name], conf=round(st.confidence, 3),
                          method=st.method, rank_of_truth=rank, n_cand=len(st.candidates)))
     total = correct + wrong + unresolved
+    big = [r for r in rows if truth[r["name"]].heavy_count() > 10]
+    big_line = (f"large species (>10 heavy atoms): {len(big)} scored, "
+                f"{sum(r['verdict'] == 'OK' for r in big)} correct, "
+                f"{sum(r['verdict'] == 'WRONG' for r in big)} wrong, "
+                f"{sum(r['verdict'] == 'open' for r in big)} open")
     print(f"\n=== {args.model}  mode={args.mode}  seeds={len(seeds)}  ({dt:.1f} s)")
     print(f"species scored: {total}   correct: {correct}   wrong: {wrong}   unresolved: {unresolved}"
           f"   truth in top-3: {in_top3}")
+    print(big_line)
     if total:
         print(f"accuracy (correct / scored): {correct / total:.1%}   "
               f"precision (correct / identified): {correct / max(1, correct + wrong):.1%}")

@@ -1,10 +1,11 @@
 
-=== AramcoMech_1.3  mode=blind  seeds=0  (142.3 s)
-species scored: 251   correct: 245   wrong: 4   unresolved: 2   truth in top-3: 249
+=== AramcoMech_1.3  mode=blind  seeds=0  (64.4 s)
+species scored: 251   correct: 245   wrong: 4   unresolved: 2   truth in top-3: 248
+large species (>10 heavy atoms): 0 scored, 0 correct, 0 wrong, 0 open
 accuracy (correct / scored): 97.6%   precision (correct / identified): 98.4%
-  WRONG C4H8OH-2O2     C4H9O3    got=CC(C(C)O)O[O]            truth=CCC(C)(O)O[O]          conf=0.98 rank=5 n=86 reactions +3.0 from 2 witness reactions, thermochemistry +3.0
-  open  SC3H5CHO       C4H6O     got=None                     truth=CC=CC=O                conf=0.00 rank=0 n=121 
-  WRONG CC4H8O         C4H8O     got=CC1COC1                  truth=CC1CCO1                conf=0.82 rank=21 n=72 thermochemistry +2.7
-  open  CH3CHCHCO      C4H5O     got=None                     truth=CC=C[C]=O              conf=0.00 rank=1 n=134 
-  WRONG C4H5-2         C4H5      got=C=C=[C]C                 truth=C=[C]C=C               conf=0.94 rank=2 n=34 thermochemistry +3.2, structure plausibility +0.5
+  WRONG C4H8OH-2O2     C4H9O3    got=CC(C(C)O)O[O]            truth=CCC(C)(O)O[O]          conf=0.99 rank=4 n=86 reactions +3.4 from 2 witness reactions, thermochemistry +2.7
+  WRONG CC4H8O         C4H8O     got=CC1COC1                  truth=CC1CCO1                conf=0.95 rank=1 n=72 thermochemistry +3.1
+  open  CH3CHCHCO      C4H5O     got=None                     truth=CC=C[C]=O              conf=0.00 rank=3 n=113 
+  WRONG C4H5-2         C4H5      got=C=C=[C]C                 truth=C=[C]C=C               conf=0.97 rank=3 n=34 thermochemistry +3.2, structure plausibility +0.5
+  open  CH3CHCHCHO     C4H6O     got=None                     truth=CC=CC=O                conf=0.00 rank=0 n=154 
   WRONG H2C4O          C4H2O     got=C#COC#C                  truth=C=C=C=C=O              conf=0.80 rank=1 n=85 reactions +3.0 from 3 witness reactions, structure plausibility +1.5

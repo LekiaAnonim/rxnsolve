@@ -326,6 +326,8 @@ def species_page(ident, st, slugs) -> str:
             else:
                 steps.append(("Reactions", "<p>No reaction had all its other species identified when this "
                                            "species was decided.</p>"))
+            steps.append(("Entropy and heat capacity", _scp_html(ident, st, c)))
+            steps.append(("Kinetics", _kinetics_html(st, c, rx, slugs)))
         ranked = st.ranked()[:5]
         if ranked:
             bars = ["<div class='probs'>"]
@@ -371,6 +373,47 @@ def species_page(ident, st, slugs) -> str:
     return (head + flag_html + "<div class='grid2' style='margin-top:22px'><div>" + "".join(left) + "</div><div>"
             "<h2 style='margin-top:0'>Why this structure</h2>" + "".join(chain) + "</div></div>"
             + "".join(solved) + more)
+
+
+def _scp_html(ident, st, c) -> str:
+    """Predicted S298 and Cp(T) of this structure against the species' own thermo card."""
+    if getattr(ident.thermo, "scp", None) is None:
+        return "<p>Not used: no entropy and heat-capacity model available.</p>"
+    if not c.scp_note:
+        return "<p>No thermo card for this species.</p>"
+    r2 = _runner_up(st)
+    out = [f"<p>A ring locks bonds that rotate freely in a chain, so rings have lower entropy and a "
+           f"different heat-capacity curve. Predicted from this structure: {_e(c.scp_note)} "
+           f"({c.log_scp:+.1f}).</p>"]
+    if r2 is not None and r2.scp_note:
+        out.append(f"<p class='muted small'>Runner-up <span class='mono'>{_e(r2.smiles)}</span>: "
+                   f"{_e(r2.scp_note)} ({r2.log_scp:+.1f}).</p>")
+    return "".join(out)
+
+
+def _kinetics_html(st, c, rx, slugs) -> str:
+    """Competing abstraction channels: do A and Ea agree with this structure?"""
+    rivals = [x for x in st.ranked()[:8] if x.key != c.key and x.log_kin < 0]
+    if not c.kin_checks and not rivals:
+        return ("<p>No competing H-abstraction channel with an identified sibling product, so the rate "
+                "parameters say nothing about this species.</p>")
+    out = ["<p>Competing abstraction channels from the same parent: a larger A should go with more "
+           "equivalent hydrogens, and a lower Ea with the weaker C–H bond (the more stable radical).</p>"]
+    if c.kin_checks:
+        out.append("<table class='small'><thead><tr><th>channel vs sibling</th><th>signal</th><th>agrees</th>"
+                   "<th>detail</th></tr></thead><tbody>")
+        for i1, i2, sib, signal, ok, detail in c.kin_checks[:8]:
+            out.append(f"<tr><td>{_equation_html(rx[i1], slugs, 1)}<br><span class='muted'>vs</span> "
+                       f"{_equation_html(rx[i2], slugs, 1)}</td><td>{_e(signal)}</td>"
+                       f"<td>{'yes' if ok else '<b>no</b>'}</td><td class='mono'>{_e(detail)}</td></tr>")
+        out.append("</tbody></table>")
+    if rivals:
+        out.append("<p>" + "; ".join(
+            f"<span class='mono'>{_e(x.smiles)}</span> contradicts "
+            f"{sum(1 for k in x.kin_checks if not k[4])} signal(s) ({x.log_kin:+.1f})" for x in rivals[:4]) + ".</p>")
+    out.append(f"<p class='legend'>This structure: {c.log_kin:+.1f}. Each contradicted signal costs "
+               "ln(0.1/0.9) = −2.2, at most three per species; the signals held in 90% of 5,001 tested pairs.</p>")
+    return "".join(out)
 
 
 # ====================================================================

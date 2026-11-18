@@ -30,8 +30,14 @@ from .smiles import parse_smiles
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 LIBRARY_FILE = os.path.join(DATA_DIR, "thermo_library.json")
+# heat capacity is compared at these temperatures (K)
+CP_TEMPS = (300.0, 500.0, 800.0, 1000.0, 1500.0)
+R_CAL = 1.987204  # cal/mol/K
 # fitted group values, so group additivity still works when the library is missing
 GA_FILE = os.path.join(DATA_DIR, "group_additivity.json")
+SCP_FILE = os.path.join(DATA_DIR, "entropy_cp_additivity.json")
+SIGMA_S = 2.0    # cal/mol/K: held-out S298 error median 1.1, mean 2.1
+SIGMA_CP = 1.0   # cal/mol/K: held-out Cp error median 0.4-0.65 over 300-1500 K
 
 
 # ====================================================================
@@ -120,10 +126,14 @@ def build_library(models_root: str, verbose: bool = False) -> dict:
             h, s = t.h298, t.s298
             if not (-400 < h < 400) or not (0 < s < 400):
                 continue
+            try:
+                cp = [round(t.cp_r(T) * R_CAL, 3) for T in CP_TEMPS]
+            except (IndexError, OverflowError):
+                cp = None
             records.append({"model": model, "name": name, "smiles": smi,
                             "key": mol.constitution_key(), "mult": mol.multiplicity,
                             "formula": mol.formula_string(),
-                            "h298": round(h, 3), "s298": round(s, 3)})
+                            "h298": round(h, 3), "s298": round(s, 3), "cp": cp})
             n += 1
         if verbose:
             print(f"{model}: {n} species with thermo")
@@ -199,8 +209,20 @@ def _aromatic_atoms(mol: Molecule, s) -> set:
     return out
 
 
+_FEATURES: dict = {}
+
+
 def group_features(mol: Molecule) -> Counter:
-    """Sparse feature vector (feature -> count) for group additivity."""
+    """Sparse feature vector (feature -> count) for group additivity (cached per structure)."""
+    k = (mol.constitution_key(), mol.multiplicity)
+    hit = _FEATURES.get(k)
+    if hit is None:
+        hit = _group_features(mol)
+        _FEATURES[k] = hit
+    return Counter(hit)
+
+
+def _group_features(mol: Molecule) -> Counter:
     target = None if mol.multiplicity is None else mol.multiplicity - 1
     structs = solve_lewis(mol, unpaired=target, max_structures=4) if target is not None else []
     if not structs:
@@ -326,12 +348,13 @@ class ThermoModel:
     """Library + group additivity, optionally excluding some models."""
 
     def __init__(self, library: dict | None, exclude_models: set[str] | None = None, verbose=False,
-                 ga: "GroupAdditivity | None" = None):
+                 ga: "GroupAdditivity | None" = None, scp: "EntropyCpModel | None" = None):
         exclude_models = exclude_models or set()
         if library is None:
             # group additivity only: saved group values, no records to match
             self.by_key, self._index, self._hs = defaultdict(list), defaultdict(list), {}
             self.ga = ga
+            self.scp = scp
             self.n_records = 0
             self.n_species = (getattr(ga, "meta", {}) or {}).get("n_species", 0)
             return
@@ -356,9 +379,11 @@ class ThermoModel:
             self._index[f].sort()
         self._hs = {f: [x[0] for x in v] for f, v in self._index.items()}
         self.n_records = len(recs)
+        self._recs = recs
         if ga is not None:
             self.ga = ga
             self.n_species = len(self.by_key)
+            self.scp = scp
             return
         # one training sample per constitution: median H298
         cached = library.get("features", {})
@@ -375,6 +400,7 @@ class ThermoModel:
             samples.append((Counter(feats), h))
         self.ga = GroupAdditivity.fit(samples, verbose=verbose)
         self.n_species = len(samples)
+        self.scp = scp if scp is not None else EntropyCpModel.fit_records(recs, cached, smiles_of, verbose)
 
     def library_match(self, key: str, h: float, s: float | None):
         vals = self.by_key.get(key)
@@ -441,6 +467,104 @@ def _robust(dh: float, sigma: float, eps: float = 0.005) -> float:
     return math.log((1 - eps) * math.exp(-0.5 * (dh / sigma) ** 2) + eps)
 
 
+class EntropyCpModel:
+    """S298 and Cp(T) from structure: group additivity plus spin degeneracy.
+
+    Rings lock bonds that rotate freely in chains, so a cyclic isomer has a
+    lower entropy (often 5-15 cal/mol/K) and a different Cp(T) curve. The
+    species' own thermo card gives S298 and Cp from 300 to 5000 K; only
+    H298 was used before. Nothing here looks up another model's polynomial:
+    the group values are fitted once, the comparison is with this card.
+    S = sum of groups (fitted on S298 - R ln(2S+1)) + R ln(2S+1).
+    """
+
+    def __init__(self, gs: GroupAdditivity, gcs: list, support: dict | None = None):
+        self.gs, self.gcs = gs, gcs
+        self.support = support or {}    # specific (L1) group -> structures in the fit containing it
+        self.meta = {}
+
+    @classmethod
+    def fit_records(cls, recs, cached_features, smiles_of, verbose=False) -> "EntropyCpModel | None":
+        by = defaultdict(list)
+        for r in recs:
+            if r.get("cp"):
+                by[r["key"]].append(r)
+        if not by:
+            return None
+
+        def median(xs):
+            xs = sorted(xs)
+            return xs[len(xs) // 2]
+
+        rows = []
+        for key, rs in by.items():
+            feats = cached_features.get(key)
+            if feats is None:
+                try:
+                    feats = group_features(parse_smiles(smiles_of.get(key, rs[0]["smiles"])))
+                except Exception:  # noqa: BLE001
+                    continue
+            mult = rs[0].get("mult") or 1
+            rows.append((Counter(feats), median([x["s298"] for x in rs]) - R_CAL * math.log(mult),
+                         [median([x["cp"][i] for x in rs]) for i in range(len(CP_TEMPS))]))
+        gs = GroupAdditivity.fit([(f, s_) for f, s_, _ in rows], verbose=verbose)
+        gcs = [GroupAdditivity.fit([(f, c[i]) for f, _, c in rows]) for i in range(len(CP_TEMPS))]
+        support = Counter(k for f, _, _ in rows for k in f if k.startswith("L1|"))
+        return cls(gs, gcs, dict(support))
+
+    def save(self, path: str = SCP_FILE, **meta) -> None:
+        with open(path, "w") as fh:
+            json.dump({**meta, "temperatures": list(CP_TEMPS), "support": self.support,
+                       "s": {"rms": round(self.gs.rms, 4), "weights": {k: round(v, 6) for k, v in sorted(self.gs.w.items())}},
+                       "cp": [{"rms": round(g.rms, 4), "weights": {k: round(v, 6) for k, v in sorted(g.w.items())}}
+                              for g in self.gcs]}, fh, indent=0)
+
+    @classmethod
+    def load(cls, path: str = SCP_FILE) -> "EntropyCpModel | None":
+        if not os.path.exists(path):
+            return None
+        with open(path) as fh:
+            d = json.load(fh)
+        m = cls(GroupAdditivity(d["s"]["weights"], d["s"]["rms"]),
+                [GroupAdditivity(g["weights"], g["rms"]) for g in d["cp"]], d.get("support", {}))
+        m.meta = {k: v for k, v in d.items() if k not in ("s", "cp", "support")}
+        return m
+
+    def predict(self, mol: Molecule, multiplicity: int) -> tuple[float, list[float]]:
+        s298 = self.gs.predict(mol) + R_CAL * math.log(max(1, multiplicity))
+        return s298, [g.predict(mol) for g in self.gcs]
+
+    def min_support(self, mol: Molecule) -> int:
+        """How many structures in the fit share this structure's rarest specific group."""
+        l1 = [k for k in group_features(mol) if k.startswith("L1|")]
+        if not l1 or not self.support:
+            return 10**6
+        return min(self.support.get(k, 0) for k in l1)
+
+    def log_likelihood(self, mol: Molecule, s_mech: float, cp_mech: list[float], multiplicity: int):
+        """(log-likelihood, z, note).
+
+        Uncertainty follows what the fit knows: sigma widens up to 3x when the
+        structure has groups the fit saw in few structures (carbenes, benzyne, strained
+        rings), and deviations within one sigma count as no evidence, so the
+        1-2 cal/mol/K differences between positional isomers do not decide
+        anything. Robust floor log 0.005 = -5.3, like the H298 term.
+        """
+        s_pred, cp_pred = self.predict(mol, multiplicity)
+        # a group seen in fewer than 10 structures is poorly fitted: widen sigma up to 3x
+        widen = 1.0 + 2.0 * max(0.0, (10 - self.min_support(mol)) / 10.0)
+        zs = (s_pred - s_mech) / (SIGMA_S * widen)
+        zc2 = sum(((p - c) / (SIGMA_CP * widen)) ** 2 for p, c in zip(cp_pred, cp_mech)) / len(cp_mech)
+        z = math.sqrt(zs * zs + zc2)
+        excess = max(0.0, z - 1.0)
+        ll = math.log(0.995 * math.exp(-0.5 * excess * excess) + 0.005)
+        dcp = max(abs(p - c) for p, c in zip(cp_pred, cp_mech))
+        note = (f"S298 {s_pred:.1f} vs mechanism {s_mech:.1f} ({s_pred - s_mech:+.1f}); "
+                f"Cp within {dcp:.1f} cal/mol/K over {int(CP_TEMPS[0])}-{int(CP_TEMPS[-1])} K"
+                + (f"; uncertainty x{widen:.1f} (rare groups in the fit)" if widen > 1.05 else ""))
+        return ll, z, note
+
+
 _DEFAULT = {}
 
 
@@ -448,7 +572,10 @@ def save_group_additivity(library: dict, path: str = GA_FILE, verbose: bool = Fa
     """Fit group additivity on the whole library and store the group values."""
     import time as _time
     m = ThermoModel(library, verbose=verbose)
-    m.ga.save(path, n_species=m.n_species, n_records=m.n_records, built=_time.strftime("%Y-%m-%d"))
+    meta = dict(n_species=m.n_species, n_records=m.n_records, built=_time.strftime("%Y-%m-%d"))
+    m.ga.save(path, **meta)
+    if m.scp is not None:
+        m.scp.save(SCP_FILE if path == GA_FILE else path.replace(".json", "_s_cp.json"), **meta)
     return m
 
 
@@ -468,11 +595,13 @@ def default_model(exclude_models: set[str] | None = None, verbose=False) -> Ther
         ga = GroupAdditivity.load()
         if ga is None:
             return None
-        m = ThermoModel(None, ga=ga)
+        m = ThermoModel(None, ga=ga, scp=EntropyCpModel.load())
     else:
         saved = None if exclude_models else GroupAdditivity.load()
-        if saved is not None and saved.meta.get("n_records") == len(lib["records"]):
-            m = ThermoModel(lib, ga=saved)      # same library: reuse the saved fit
+        saved_scp = None if exclude_models else EntropyCpModel.load()
+        if saved is not None and saved.meta.get("n_records") == len(lib["records"]) \
+                and saved_scp is not None and saved_scp.meta.get("n_records") == len(lib["records"]):
+            m = ThermoModel(lib, ga=saved, scp=saved_scp)      # same library: reuse the saved fits
         else:
             m = ThermoModel(lib, set(exclude_models or ()), verbose=verbose)
     _DEFAULT[key] = m

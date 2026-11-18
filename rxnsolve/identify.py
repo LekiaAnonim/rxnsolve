@@ -41,9 +41,14 @@ D_MAX = 4              # edits considered "elementary"; beyond is uninformative
 D_CAP_GAP = 3          # one reaction can move a candidate by at most this many edits
 MAX_FORMULA_CANDIDATES = 80
 DUPLICATE_PENALTY = 6.0  # a mechanism rarely lists the same molecule twice
+# competing H-abstraction channels: larger A <-> more equivalent H, lower Ea <->
+# weaker C-H; each held in ~90 % of 5,001 pairs in 7 identified mechanisms
+KIN_PENALTY = math.log(0.1 / 0.9)   # one contradicted signal (about -2.2)
+KIN_MAX_CONTRADICTIONS = 3          # cap: the signals of one species are correlated
 LUMPED_WEIGHT = 0.25     # weight of a reaction with 3+ species on one side
 GEN_PER_REACTION = 60    # reaction-built structures kept per witness reaction
-BIG_SIDE_HEAVY = 14      # above this many heavy atoms on a side, search 2 deletions per side, not 3
+BIG_SIDE_HEAVY = 14      # above this many heavy atoms on a side ...
+BIG_SIDE_DEPTH = 2       # ... search at most this many bond deletions on each side (3 otherwise)
 
 IDENTIFY_SECONDS = 15.0  # per open species per round
 IDENTIFY_REACTIONS = 30  # witness reactions scored per species, elementary and small first
@@ -98,10 +103,17 @@ class Candidate:
     thermo_raw: float = 0.0
     thermo_dh: float | None = None
     thermo_note: str = ""
+    log_kin: float = 0.0
+    kin_checks: list = field(default_factory=list)   # (r1, r2, sibling, signal, agrees, detail)
+    log_scp: float = 0.0          # entropy and heat capacity vs the species' own thermo card
+    scp_raw: float = 0.0
+    scp_z: float | None = None
+    scp_note: str = ""
 
     @property
     def score(self) -> float:
-        return self.log_prior + self.log_name + self.log_like + self.log_thermo - self.dup_penalty
+        return (self.log_prior + self.log_name + self.log_like + self.log_thermo + self.log_kin
+                + self.log_scp - self.dup_penalty)
 
 
 @dataclass
@@ -140,19 +152,84 @@ def explain_decision(st: "SpeciesState", top: "Candidate", n_wit: int) -> str:
     r2 = max(others, key=lambda c: c.score)
     parts = {
         "reactions": top.log_like - r2.log_like,
+        "kinetics": top.log_kin - r2.log_kin,
         "thermochemistry": top.log_thermo - r2.log_thermo,
+        "entropy and heat capacity": top.log_scp - r2.log_scp,
         "name": top.log_name - r2.log_name,
         "structure plausibility": top.log_prior - r2.log_prior,
         "uniqueness": r2.dup_penalty - top.dup_penalty,
     }
     keep = sorted(((v, k) for k, v in parts.items() if v >= 0.5), reverse=True)
-    if not keep:
-        return "small margins on all evidence"
+
     def part(v, k):
         if k == "reactions":
             return f"reactions {v:+.1f} from {n_wit} witness reaction{'s' if n_wit != 1 else ''}"
         return f"{k} {v:+.1f}"
-    return ", ".join(part(v, k) for v, k in keep[:3])
+
+    text = ", ".join(part(v, k) for v, k in keep[:3]) if keep else "small margins on all evidence"
+    # structures that tied with the winner on everything except the rate parameters
+    base = top.score - top.log_kin
+    tied = [c for c in others if c.score - c.log_kin >= base - 1.0 and c.log_kin < top.log_kin - 0.5]
+    if tied and not any(k == "kinetics" for _, k in keep[:3]):
+        text += "; kinetics ruled out " + ", ".join(c.smiles for c in tied[:2])
+    return text
+
+
+_LOW_SPIN: dict = {}
+
+
+def effective_multiplicity(mol: Molecule) -> int:
+    """The stated multiplicity, or the low-spin Lewis ground state when none is stated.
+
+    Uniqueness compares (structure, spin): a doublet radical given as SMILES
+    (multiplicity 2) and the same radical found by the engine (spin unset)
+    are the same species; CH2 (triplet) and CH2(S) (singlet) are not.
+    """
+    if mol.multiplicity:
+        return mol.multiplicity
+    k = mol.constitution_key()
+    hit = _LOW_SPIN.get(k)
+    if hit is None:
+        from .lewis import solve_lewis
+        structs = solve_lewis(mol, max_structures=1)
+        hit = structs[0].unpaired + 1 if structs else 0
+        _LOW_SPIN[k] = hit
+    return hit
+
+
+_EQUIV_H: dict = {}
+
+
+def equivalent_h(parent: Molecule, radical: Molecule) -> int:
+    """Number of H atoms of ``parent`` whose removal gives ``radical`` (path degeneracy)."""
+    key = (parent.constitution_key(), radical.constitution_key())
+    hit = _EQUIV_H.get(key)
+    if hit is None:
+        hit = 0
+        target = radical.constitution_key()
+        for i, a in enumerate(parent.atoms):
+            if a.element != "H" or len(parent.adj[i]) != 1:
+                continue
+            m = parent.copy()
+            (nb,) = m.adj[i]
+            m.remove_bond(i, nb)
+            sub, _ = m.subgraph([j for j in range(m.n) if j != i])
+            hit += sub.constitution_key() == target
+        _EQUIV_H[key] = hit
+    return hit
+
+
+_GA_FALLBACK: list = []
+
+
+def _ga_model(thermo):
+    """Group additivity for radical stability: the run's model, else the saved values."""
+    if thermo is not None:
+        return thermo.ga
+    if not _GA_FALLBACK:
+        from .thermo import GroupAdditivity
+        _GA_FALLBACK.append(GroupAdditivity.load())
+    return _GA_FALLBACK[0]
 
 
 def spin_from_name(name: str, formula: Counter | None) -> int | None:
@@ -262,6 +339,14 @@ class Identifier:
             st.status = "known"
             st.method = "given"
             st.confidence = 1.0
+        self._rx_by_product: dict[str, list[Reaction]] = {}
+        self._rx_by_reactants: dict[tuple, list[Reaction]] = {}
+        for r in self.mech.reactions:
+            if r.A is None or r.duplicate:
+                continue
+            for s_ in set(r.products):
+                self._rx_by_product.setdefault(s_, []).append(r)
+            self._rx_by_reactants.setdefault(tuple(sorted(r.reactants)), []).append(r)
         for st in self.species.values():
             if st.formula is None and not st.resolved:
                 st.status = "no-formula"
@@ -325,6 +410,13 @@ class Identifier:
                 c.thermo_raw, c.thermo_dh, c.thermo_note = self.thermo.log_likelihood(
                     mol, key, t.h298, t.s298)
                 c.log_thermo = c.thermo_raw
+                scp = getattr(self.thermo, "scp", None)
+                if scp is not None and len(t.low) >= 7:
+                    from .thermo import CP_TEMPS, R_CAL
+                    cp_mech = [t.cp_r(T) * R_CAL for T in CP_TEMPS]
+                    c.scp_raw, c.scp_z, c.scp_note = scp.log_likelihood(
+                        mol, t.s298, cp_mech, effective_multiplicity(mol))
+                    c.log_scp = c.scp_raw
             except Exception as e:  # noqa: BLE001 - thermo is optional evidence
                 c.thermo_note = f"thermo estimate failed: {e}"
         return c
@@ -471,9 +563,19 @@ class Identifier:
             st.notes.append(f"thermo unreliable: no candidate within 12 kcal/mol (best {min(dhs):.1f})")
         for c in cands:
             c.log_thermo = c.thermo_raw * factor
+        # same reliability rule for entropy and heat capacity (z = combined deviation in sigmas)
+        zs = [c.scp_z for c in cands if c.scp_z is not None]
+        sfac = 0.25 if zs and min(zs) > 3.0 else 1.0
+        # S298 and Cp come from the same NASA card as H298: if H298 fits no
+        # candidate, the card is suspect as a whole
+        sfac = min(sfac, factor)
+        if sfac < 1 and not any("entropy/Cp unreliable" in n for n in st.notes):
+            st.notes.append(f"entropy/Cp unreliable: no candidate within 3 sigma (best {min(zs):.1f})")
+        for c in cands:
+            c.log_scp = c.scp_raw * sfac
         taken = self._taken(st)
         for c in cands:
-            c.dup_penalty = DUPLICATE_PENALTY if (c.key, st.multiplicity) in taken else 0.0
+            c.dup_penalty = DUPLICATE_PENALTY if (c.key, effective_multiplicity(c.mol)) in taken else 0.0
             c.log_like = 0.0
         used = []
         for r in rxns:
@@ -488,7 +590,7 @@ class Identifier:
                     big = max(sum(m.heavy_count() for m in sides[0]),
                               sum(m.heavy_count() for m in sides[1]))
                     res = sigma_distance(sides[0], sides[1], max_total=D_MAX,
-                                         max_side=2 if big > BIG_SIDE_HEAVY else 3)
+                                         max_side=BIG_SIDE_DEPTH if big > BIG_SIDE_HEAVY else 3)
                     d = None if res is None else res[0]
                 c.distances[r.index] = d
             used.append(r)
@@ -509,6 +611,9 @@ class Identifier:
                 d = c.distances.get(r.index)
                 gap = D_CAP_GAP if d is None else min(D_CAP_GAP, d - best)
                 c.log_like -= ALPHA * w * gap
+        pairs = self.kinetic_pairs(st)
+        for c in cands:
+            self._kinetic_score(st, c, pairs)
         scores = [c.score for c in cands]
         top = max(scores)
         z = sum(math.exp(s - top) for s in scores)
@@ -516,11 +621,71 @@ class Identifier:
             c.posterior = math.exp(c.score - top) / z
         return cands, rxns
 
+    # ------------------------------------------------------------ kinetics
+    def kinetic_pairs(self, st: SpeciesState) -> list[tuple]:
+        """Competing H-abstraction channels that make ``st`` and an identified isomer.
+
+        (r, r2, sibling, parent): r gives st, r2 has the same reactants and the
+        same products except the isomer ``sibling``; ``parent`` is the reactant
+        that loses the H (formula of st plus one H).  Only forward-written
+        reactions with their own rate parameters (no DUPLICATE parts).
+        """
+        if st.formula is None or not hasattr(self, "_rx_by_product"):
+            return []
+        target = Counter(st.formula) + Counter({"H": 1})
+        out = []
+        for r in self._rx_by_product.get(st.name, []):
+            if r.products.count(st.name) != 1 or st.name in r.reactants:
+                continue
+            parents = [p for p in set(r.reactants) if self.species.get(p) is not None
+                       and self.species[p].formula == target and self.species[p].resolved]
+            if not parents:
+                continue
+            rest = Counter(r.products)
+            rest[st.name] -= 1
+            for r2 in self._rx_by_reactants.get(tuple(sorted(r.reactants)), []):
+                if r2 is r:
+                    continue
+                diff = Counter(r2.products) - rest
+                if sum(diff.values()) != 1 or Counter(r2.products) - diff != +rest:
+                    continue
+                sib = next(iter(diff))
+                sst = self.species.get(sib)
+                if sib == st.name or sst is None or not sst.resolved or sst.formula != st.formula:
+                    continue
+                out.append((r, r2, sib, parents[0]))
+        return out
+
+    def _kinetic_score(self, st: SpeciesState, cand: Candidate, pairs) -> None:
+        cand.log_kin, cand.kin_checks = 0.0, []
+        if not pairs:
+            return
+        ga = _ga_model(self.thermo)
+        bad = 0
+        for r, r2, sib, parent in pairs:
+            pmol, smol = self.mol_of(parent), self.mol_of(sib)
+            h1, h2 = equivalent_h(pmol, cand.mol), equivalent_h(pmol, smol)
+            if not h1 or not h2:
+                continue      # this candidate is not made by abstraction from the parent
+            if r.n is not None and abs(r.n - r2.n) < 1e-9 and r.A != r2.A and h1 != h2:
+                ok = (r.A > r2.A) == (h1 > h2)
+                bad += not ok
+                cand.kin_checks.append((r.index, r2.index, sib, "degeneracy", ok,
+                                        f"{h1} vs {h2} equivalent H; A {r.A:.3g} vs {r2.A:.3g}"))
+            if ga is not None and r.Ea != r2.Ea:
+                g1, g2 = ga.predict(cand.mol), ga.predict(smol)
+                if abs(g1 - g2) > 1.0:
+                    ok = (r.Ea < r2.Ea) == (g1 < g2)
+                    bad += not ok
+                    cand.kin_checks.append((r.index, r2.index, sib, "bond strength", ok,
+                                            f"radical H298 {g1:.1f} vs {g2:.1f} kcal/mol; Ea {r.Ea:g} vs {r2.Ea:g}"))
+        cand.log_kin = KIN_PENALTY * min(bad, KIN_MAX_CONTRADICTIONS) if bad else 0.0
+
     def _taken(self, me: SpeciesState) -> set:
         out = set()
         for st in self.species.values():
             if st is not me and st.resolved and st.chosen is not None:
-                out.add((st.chosen.key, st.multiplicity))
+                out.add((st.chosen.key, effective_multiplicity(st.chosen.mol)))
         return out
 
     # ------------------------------------------------------------ main loop
@@ -566,7 +731,7 @@ class Identifier:
             kept = []
             for p in sorted(accept, key=lambda p: (-p[0], -p[2])):
                 st_p, top_p = p[3], p[4]
-                k = (top_p.key, st_p.multiplicity)
+                k = (top_p.key, effective_multiplicity(top_p.mol))
                 if k not in claimed:   # never hand one structure to two species ...
                     claimed.add(k)
                     kept.append(p)

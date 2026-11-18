@@ -20,7 +20,7 @@ import time
 from collections import Counter
 
 from .elements import ELEMENTS
-from .lewis import smallest_rings, solve_lewis
+from .lewis import has_lewis, smallest_rings, solve_lewis
 from .molecule import Molecule, canonical_order, degree_of_unsaturation
 
 ENUM_MAX_SIGMA = {"C": 4, "N": 3, "O": 2, "S": 2, "P": 3, "Si": 4, "B": 3,
@@ -66,6 +66,11 @@ def enumerate_isomers(counts: dict[str, int], max_results: int = 4000,
         if el not in ELEMENTS:
             return None
     dbe = degree_of_unsaturation(counts)
+    if len(heavy) >= 7 and dbe >= 3.5:
+        # aromatics and other highly unsaturated C7+ species: across every
+        # formula in RMG-models, 50 of 52 like this overflow the limits after
+        # seconds of work - don't start; name and reaction candidates cover them
+        return None
     ring_cap = max(0, int(math.floor(dbe + 1e-9)))
     if max_rings is not None:
         ring_cap = min(ring_cap, max_rings)
@@ -154,7 +159,7 @@ def enumerate_isomers(counts: dict[str, int], max_results: int = 4000,
             key = mol.constitution_key()
             if key in out:
                 continue
-            if not solve_lewis(mol, max_structures=1):
+            if not has_lewis(mol):
                 continue
             out[key] = mol
             if len(out) > max_results:
@@ -193,8 +198,20 @@ def _hydrogen_only(n_h):
 # Plausibility prior
 # ====================================================================
 
+_PLAUSIBILITY: dict = {}
+
+
 def plausibility(mol: Molecule, min_deficiency: int | None = None) -> tuple[float, list[str]]:
-    """Log prior (0 = ordinary) and the reasons for each penalty."""
+    """Log prior (0 = ordinary) and the reasons for each penalty (cached per structure)."""
+    k = (mol.constitution_key(), min_deficiency)
+    hit = _PLAUSIBILITY.get(k)
+    if hit is None:
+        hit = _plausibility(mol, min_deficiency)
+        _PLAUSIBILITY[k] = hit
+    return hit[0], list(hit[1])
+
+
+def _plausibility(mol: Molecule, min_deficiency: int | None = None) -> tuple[float, list[str]]:
     structs = solve_lewis(mol, max_structures=4)
     if not structs:
         return -50.0, ["no Lewis structure"]
