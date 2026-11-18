@@ -436,7 +436,7 @@ class ReactionSolution:
         el = self.R.atoms[i].element
         owner = self.r_owner[i]
         local = i - self._r_offsets[owner]
-        return f"{el}{local + 1}[{self._names_r[owner]}]"
+        return f"{el}{local + 1} ({self._names_r[owner]})"
 
     def summary_lines(self) -> list[str]:
         if not self.balanced:

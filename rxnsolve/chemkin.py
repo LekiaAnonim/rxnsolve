@@ -150,6 +150,23 @@ def parse_chemkin(chem_path: str, thermo_path: str | None = None) -> Mechanism:
     if thermo_path:
         _parse_thermo_lines(_read(thermo_path), mech)
     _parse_reactions(rxn_lines, mech)
+    if not mech.species and mech.reactions:
+        # no SPECIES block: take the species from the reactions, in order
+        seen = {}
+        for r in mech.reactions:
+            for s_ in r.reactants + r.products:
+                seen.setdefault(s_, None)
+        mech.species = list(seen)
+        mech.warnings.append("no SPECIES block; species taken from the reactions")
+    # thermo names that differ only in case (OH vs oh)
+    lower = {}
+    for k, v in mech.thermo.items():
+        lower.setdefault(k.lower(), v)
+    for s_ in mech.species:
+        if s_ not in mech.thermo and s_.lower() in lower:
+            mech.thermo[s_] = lower[s_.lower()]
+    if not mech.species and not mech.reactions:
+        mech.warnings.append("no SPECIES or REACTIONS found - is this a CHEMKIN file?")
     missing = [s for s in mech.species if s not in mech.thermo]
     if missing:
         mech.warnings.append(f"{len(missing)} species have no thermo data: {missing[:10]}")
@@ -164,14 +181,25 @@ def _float(s: str) -> float:
 
 
 def _parse_thermo_lines(lines: list[str], mech: Mechanism) -> None:
-    clean = [l.rstrip("\n") for l in lines]
+    # blank lines carry nothing in a THERMO block; some files are double-spaced
+    clean = [l.rstrip("\r\n") for l in lines if l.strip()]
     i = 0
     default_mid = 1000.0
     n = len(clean)
+    def code(k):
+        # a card line's number (1-4) sits before any trailing "! comment"
+        return _strip_comment(clean[k]).rstrip()
+
+    def card(k, digit):
+        # ... or in column 80, the CHEMKIN standard, even with text after it
+        line = clean[k]
+        return code(k).endswith(digit) or (len(line) >= 80 and line[79] == digit)
+
+    species = set(mech.species)
     while i < n:
         line = clean[i]
-        s = line.rstrip()
-        if not s or s.lstrip().startswith("!"):
+        s = code(i)
+        if not s:
             i += 1
             continue
         up = s.strip().upper()
@@ -186,19 +214,36 @@ def _parse_thermo_lines(lines: list[str], mech: Mechanism) -> None:
                 pass
             i += 1
             continue
-        if s.endswith("1") and i + 3 < n and clean[i + 1].rstrip().endswith("2") \
-                and clean[i + 2].rstrip().endswith("3") and clean[i + 3].rstrip().endswith("4"):
-            entry = _parse_entry(clean[i:i + 4], default_mid)
+        if card(i, "1") and i + 3 < n and card(i + 1, "2") and card(i + 2, "3") and card(i + 3, "4"):
+            entry = _parse_entry(clean[i:i + 4], default_mid, species)
             if entry and entry.name not in mech.thermo:
                 mech.thermo[entry.name] = entry
             i += 4
             continue
+        if s.endswith("&"):
+            # extended card: composition continues on the following line(s)
+            j = i + 1
+            extra = []
+            while j < n and not code(j).endswith("2") and j < i + 4:
+                extra.append(code(j))
+                j += 1
+            if j + 2 < n and code(j).endswith("2") and code(j + 1).endswith("3") and code(j + 2).endswith("4"):
+                entry = _parse_entry([clean[i], clean[j], clean[j + 1], clean[j + 2]], default_mid,
+                                     species, extra_comp=" ".join(extra))
+                if entry and entry.name not in mech.thermo:
+                    mech.thermo[entry.name] = entry
+                i = j + 3
+                continue
         i += 1
 
 
-def _parse_entry(block: list[str], default_mid: float) -> ThermoEntry | None:
+def _parse_entry(block: list[str], default_mid: float, species: set | None = None,
+                 extra_comp: str = "") -> ThermoEntry | None:
     l1 = block[0].ljust(80)
-    name = l1[:18].split()[0] if l1[:18].split() else l1.split()[0]
+    full = l1.split()[0]
+    short = l1[:18].split()[0] if l1[:18].split() else full
+    # names longer than 18 characters run into the date field
+    name = full if (species and full in species) or not l1[:18].split() else short
     comp = Counter()
     fields = [l1[24:29], l1[29:34], l1[34:39], l1[39:44], l1[73:78]]
     for f in fields:
@@ -217,6 +262,9 @@ def _parse_entry(block: list[str], default_mid: float) -> ThermoEntry | None:
         except KeyError:
             if el.upper() == "E":
                 comp["E"] += k
+    for el, cnt in re.findall(r"([A-Za-z]{1,2})\s+(\d+(?:\.\d*)?)", extra_comp):
+        if is_element(el) and float(cnt) > 0:
+            comp[normalize_symbol(el)] += int(round(float(cnt)))
     if not comp:
         # free-format composition (some generators): look for El count pairs
         for el, cnt in re.findall(r"([A-Z][A-Za-z]?)\s+(\d+)", l1[18:45]):

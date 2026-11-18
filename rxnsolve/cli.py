@@ -6,6 +6,7 @@
     python -m rxnsolve lewis    "C=C[CH2]" [--svg allyl.svg]
     python -m rxnsolve isomers  C3H6O
     python -m rxnsolve build-thermo --models ../RMG-models
+    python -m rxnsolve serve --models ../RMG-models     # web app on http://127.0.0.1:8770
 """
 
 from __future__ import annotations
@@ -27,45 +28,22 @@ def _formula(text: str) -> Counter:
 
 
 def cmd_identify(a, audit=False):
-    from .chemkin import parse_chemkin, read_known_smiles
-    from .identify import Identifier
-    from .report import write_json, write_report
+    from .pipeline import run_pipeline
 
-    t0 = time.time()
-    mech = parse_chemkin(a.chem, a.thermo)
-    known = read_known_smiles(a.known) if a.known else {}
-    ident = Identifier(mech, known, use_names=not a.no_names, verbose=not a.quiet,
-                       thermo=None if a.no_thermo else "auto",
+    res = run_pipeline(a.chem, a.thermo, a.known, out_dir=a.out, mode="audit" if audit else "identify",
+                       use_names=not a.no_names, use_thermo=not a.no_thermo,
                        use_spin_labels=not a.no_spin_labels,
-                       threshold=a.threshold, time_limit=a.time_limit)
-    os.makedirs(a.out, exist_ok=True)
+                       audit_only=getattr(a, "audit_only", False), solve_reactions=not a.no_reactions,
+                       threshold=a.threshold, time_limit=a.time_limit, verbose=not a.quiet)
+    ident = res["ident"]
     if audit:
-        ident.setup()
-        findings = ident.audit(verbose=not a.quiet)
-        print(f"audit: {len(findings)} of {len(known)} given structures disagree with the evidence; "
-              f"{len(ident.audit_partial)} only partly checked (time budget)")
-        if not a.audit_only:
-            # then identify everything the SMILES file did not cover, seeded by it
-            ident.run()
-    else:
-        ident.run()
-    if not a.no_reactions:
-        ident.solve_all_reactions()
-    base = os.path.join(a.out, "")
-    with open(base + "SMILES.txt", "w") as fh:
-        fh.write(ident.smiles_txt())
-    write_json(ident, base + "identification.json")
-    where = os.path.join(os.path.basename(os.path.dirname(os.path.abspath(a.chem))),
-                         os.path.basename(a.chem))
-    if audit:
-        title = ("Audit: " if a.audit_only else "Audit + identification: ") + where
-    else:
-        title = "Species identification: " + where
-    write_report(ident, base + "report.html", title=title,
-                 inputs=" + ".join(os.path.basename(x) for x in (a.chem, a.thermo, a.known) if x))
-    counts = Counter(s.status for s in ident.species.values())
-    print(f"{dict(counts)}  ->  {base}report.html, {base}SMILES.txt, {base}identification.json "
-          f"({time.time() - t0:.1f} s)")
+        print(f"audit: {res['flagged']} of {len(ident.known)} given structures disagree with the "
+              f"evidence; {len(ident.audit_partial)} only partly checked (time budget)")
+    out = os.path.abspath(a.out)
+    print(f"{res['counts']} in {res['seconds']:.1f} s\nresults saved in {out}/\n"
+          f"  index.html           report (open in a browser)\n"
+          f"  SMILES.txt           structures, RMG importer format\n"
+          f"  identification.json  everything, machine-readable")
 
 
 def _side(text):
@@ -114,7 +92,7 @@ def cmd_lewis(a):
 
 
 def _write_svg(path, svg, css):
-    svg = svg.replace(">", "><style>:root{--ink:#222;--muted:#666;--accent:#c2410c;--o:#b91c1c;--n:#1d4ed8;"
+    svg = svg.replace(">", "><style>:root{--ink:#111827;--muted:#6b7280;--change:#ea580c;--o:#c0262d;--n:#1d4ed8;"
                            "--mono:Menlo,monospace}" + css + "</style>", 1)
     with open(path, "w") as fh:
         fh.write(svg)
@@ -178,6 +156,11 @@ def main(argv=None):
     p.add_argument("formula")
     p.add_argument("--top", type=int, default=25)
     p.add_argument("--max-heavy", type=int, default=9)
+    p = sub.add_parser("serve", help="web app: connect RMG-models, pick a mechanism, identify it")
+    p.add_argument("--models", default=os.environ.get("RXNSOLVE_MODELS"),
+                   help="folder of mechanisms (RMG-models layout); can also be set in the page")
+    p.add_argument("--runs", default="rxnsolve_runs", help="where run reports are written")
+    p.add_argument("--port", type=int, default=8770)
     p = sub.add_parser("build-thermo", help="build the thermo library from identified models")
     p.add_argument("--models", required=True)
     p.add_argument("-q", "--quiet", action="store_true")
@@ -192,6 +175,9 @@ def main(argv=None):
         cmd_lewis(a)
     elif a.cmd == "isomers":
         cmd_isomers(a)
+    elif a.cmd == "serve":
+        from .webapp import serve
+        serve(a.models, a.runs, port=a.port)
     elif a.cmd == "build-thermo":
         cmd_build_thermo(a)
 

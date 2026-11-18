@@ -49,13 +49,48 @@ def _import_args(folder: str) -> dict:
     return out
 
 
+_THERMO_NAME = re.compile(r"therm", re.I)
+_MECH_NAME = re.compile(r"(mech|kinetic|chem|reaction)", re.I)
+
+
+def find_model_inputs(folder: str) -> dict:
+    """Mechanism, thermo and SMILES files of one model folder.
+
+    import.sh (the RMG importer layout) is read first; when a file it names
+    does not exist (a renamed file, a name with a space), the folder is
+    searched: *.inp or *mech*/*kinetic* for the mechanism, *therm* for thermo.
+    """
+    args = _import_args(folder)
+    files = sorted(f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)))
+    text = [f for f in files if f.lower().endswith((".inp", ".txt", ".dat", ".mech", ".ck", ".chemkin"))]
+
+    def pick(pred):
+        for f in text:
+            if pred(f):
+                return os.path.join(folder, f)
+        return None
+
+    chem = args.get("reactions") or args.get("species")
+    if not chem or not os.path.exists(chem):
+        chem = (pick(lambda f: f.lower().endswith(".inp") and not _THERMO_NAME.search(f))
+                or pick(lambda f: _MECH_NAME.search(f) and not _THERMO_NAME.search(f)
+                        and not re.search(r"tran", f, re.I) and f != "SMILES.txt"))
+    thermo = args.get("thermo")
+    if not thermo or not os.path.exists(thermo):
+        thermo = pick(lambda f: _THERMO_NAME.search(f) and not re.search(r"tran", f, re.I))
+    known = os.path.join(folder, "SMILES.txt")
+    return {"chem": chem, "thermo": thermo, "known": known if os.path.exists(known) else None,
+            "has_import": "reactions" in args or "species" in args}
+
+
 def build_library(models_root: str, verbose: bool = False) -> dict:
     """Scan RMG-models style folders; return {"records": [...]}."""
     records = []
     for dirpath, _dirs, files in os.walk(models_root):
         if "SMILES.txt" not in files or "import.sh" not in files:
             continue
-        args = _import_args(dirpath)
+        args = find_model_inputs(dirpath)
+        args["reactions"] = args["chem"]
         model = os.path.relpath(dirpath, models_root)
         mech = Mechanism()
         for key in ("thermo", "reactions"):
@@ -309,6 +344,7 @@ class ThermoModel:
             samples.append((Counter(feats), h))
         self.ga = GroupAdditivity.fit(samples, verbose=verbose)
         self.n_species = len(samples)
+        self.n_records = len(recs)
 
     def library_match(self, key: str, h: float, s: float | None):
         vals = self.by_key.get(key)

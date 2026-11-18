@@ -170,6 +170,12 @@ def solve_lewis(mol: Molecule, charge: int | None = None, unpaired: int | None =
             return []  # sigma skeleton impossible for this element
         bmax.append(bm)
     cap = [bmax[i] - deg[i] for i in range(n)]
+    # a halogen with one bond partner keeps a single bond: CH2Br is [CH2]Br and
+    # BrO is [O]Br, not radicals parked on an expanded-octet Br=C / Br=O.
+    # Hypervalent halogens (ClO2, ClO3: two or more partners) may still expand.
+    for i in range(n):
+        if atoms[i].element in ("F", "Cl", "Br", "I") and deg[i] <= 1:
+            cap[i] = 0
 
     # pi-capable edges, ordered by BFS so atoms finish early (better bounds)
     pi_adj: dict[int, list[int]] = {i: [] for i in range(n)}

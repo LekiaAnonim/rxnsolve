@@ -13,8 +13,8 @@ counts). No species are given as known.
 | GRI-Mech 3.0 (+RMG extras) | 59 | blind | 59 | 0 | 0 | 100% | 59 | 5 s |
 | USC Mech II | 110 | names | 106 | 2 | 2 | 98.1% | 110 | 71 s |
 | USC Mech II | 110 | blind | 104 | 4 | 2 | 96.3% | 110 | 137 s |
-| AramcoMech 1.3 (C4) | 251 | names | 245 | 3 | 3 | 98.8% | 249 | 90 s |
-| AramcoMech 1.3 (C4) | 251 | blind | 245 | 3 | 3 | 98.8% | 249 | 61 s |
+| AramcoMech 1.3 (C4) | 251 | names | 245 | 4 | 2 | 98.4% | 249 | 90 s |
+| AramcoMech 1.3 (C4) | 251 | blind | 245 | 4 | 2 | 98.4% | 249 | 61 s |
 
 Precision = correct / (correct + wrong). Times are wall-clock with up to four
 runs in parallel on one laptop. Numbers include the fix for Fortran blank-sign
@@ -39,7 +39,9 @@ aromatics (benzene, phenol, cyclopentadiene, oxiranes) need it as an anchor.
   (o- vs p-cresol) and Aramco `C4H8OH-2O2` have the same reactions and nearly
   equal thermo. The open ones are left open, with the truth ranked 1–2.
 * **`H2C4O`** (`C=C=C=C=O` vs `C#COC#C`): 3 witness reactions, close thermo.
-  The truth is ranked 2nd.
+  It is picked wrongly in USC and Aramco. In Aramco it used to be left open,
+  until the larger thermo library from the parser fixes tipped it. The truth is
+  ranked 1st–2nd.
 * **`CH3CHOCH2` in blind mode.** Methyloxirane and methyl vinyl ether are only
   ~3 kcal/mol apart, and the 3-ring prior tips the choice to the ether. With
   names (`CH3CHOCH2` reads as a ring) it is correct.
@@ -49,6 +51,16 @@ aromatics (benzene, phenol, cyclopentadiene, oxiranes) need it as an anchor.
 * **Possible answer-key issues.** In AramcoMech, `C4H5-2` is CH₂=C=C•–CH₃ in
   some mechanisms but is mapped to `C=[C]C=C` in the RMG-models key. `CC4H8O`
   (2- vs 3-methyloxetane) needs a closer look.
+
+## Other models run through the web app
+
+| Model | Species | Agree with SMILES.txt | Differ | Time |
+|---|---|---|---|---|
+| 2-BTP (Br/F flame-inhibitor chemistry), names, own thermo excluded | 188 | 183 | 4 (H2C4O, C6H3, the cresol/methylphenoxy pair) | 65 s |
+
+For the methylphenoxy and cresol species, 2-BTP's key says *meta* while USC
+Mech II's key says *ortho*. The RMG importer's own answers for these
+positional isomers are not consistent between models.
 
 ## Audit of existing identifications
 

@@ -358,16 +358,16 @@ def _anchor(t, px):
 SVG_CSS = """
 svg.lewis, svg.rxn { overflow: visible; max-width: 100%; height: auto; }
 svg .bond { stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; }
-svg .bond.hl { stroke: var(--accent); stroke-width: 2.4; }
+svg .bond.hl { stroke: var(--change); stroke-width: 2.6; }
 svg .atom { font: 600 14px var(--mono); fill: var(--ink); }
 svg .atom.el-H { font-weight: 500; fill: var(--muted); }
 svg .atom.el-O { fill: var(--o); } svg .atom.el-N { fill: var(--n); }
-svg .lp { fill: var(--ink); } svg .rad { fill: var(--accent); }
-svg .chg { fill: none; stroke: var(--ink); stroke-width: 1; }
+svg .lp { fill: var(--ink); } svg .rad { fill: var(--change); }
+svg .chg { fill: #fff; stroke: var(--ink); stroke-width: 1; }
 svg .chgt { font: 600 9px var(--mono); fill: var(--ink); }
-svg .mapno { font: 9px var(--mono); fill: var(--accent); }
+svg .mapno { font: 600 9px var(--mono); fill: var(--change); }
 svg .rxarrow { stroke: var(--ink); stroke-width: 1.6; }
 svg .rxheadp { fill: var(--ink); }
-svg .curly { fill: none; stroke: var(--accent); stroke-width: 1.5; }
-svg .curlyhead { fill: var(--accent); }
+svg .curly { fill: none; stroke: var(--change); stroke-width: 1.5; }
+svg .curlyhead { fill: var(--change); }
 """

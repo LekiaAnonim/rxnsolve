@@ -45,7 +45,11 @@ LUMPED_WEIGHT = 0.25     # weight of a reaction with 3+ species on one side
 GEN_PER_REACTION = 60    # reaction-built structures kept per witness reaction
 BIG_SIDE_HEAVY = 14      # above this many heavy atoms on a side, search 2 deletions per side, not 3
 
-IDENTIFY_SECONDS = 30.0  # per open species per round
+IDENTIFY_SECONDS = 15.0  # per open species per round
+IDENTIFY_REACTIONS = 30  # witness reactions scored per species, elementary and small first
+BIG_SPECIES_HEAVY = 10   # above this many heavy atoms a species gets the smaller limits below
+BIG_CANDIDATES = 50      # candidates scored for a big species (160 otherwise)
+BIG_GEN_REACTIONS = 8    # witness reactions used to build candidates for a big species
 PARTIAL_MIN_REACTIONS = 10  # a species cut off by the budget needs this many scored reactions
 
 # audit limits (per given species)
@@ -128,6 +132,29 @@ class SpeciesState:
         return sorted(self.candidates.values(), key=lambda c: -c.posterior)
 
 
+def explain_decision(st: "SpeciesState", top: "Candidate", n_wit: int) -> str:
+    """Which evidence separated the winner from the runner-up, largest first."""
+    others = [c for c in st.candidates.values() if c.key != top.key and c.posterior > 0]
+    if not others:
+        return "only possible structure for the formula"
+    r2 = max(others, key=lambda c: c.score)
+    parts = {
+        "reactions": top.log_like - r2.log_like,
+        "thermochemistry": top.log_thermo - r2.log_thermo,
+        "name": top.log_name - r2.log_name,
+        "structure plausibility": top.log_prior - r2.log_prior,
+        "uniqueness": r2.dup_penalty - top.dup_penalty,
+    }
+    keep = sorted(((v, k) for k, v in parts.items() if v >= 0.5), reverse=True)
+    if not keep:
+        return "small margins on all evidence"
+    def part(v, k):
+        if k == "reactions":
+            return f"reactions {v:+.1f} from {n_wit} witness reaction{'s' if n_wit != 1 else ''}"
+        return f"{k} {v:+.1f}"
+    return ", ".join(part(v, k) for v, k in keep[:3])
+
+
 def spin_from_name(name: str, formula: Counter | None) -> int | None:
     u = name.upper()
     if re.search(r"\(S\)$|^S-?CH2$|CH2S$|CH2\*$|SING|\(1D\)|1D$", u):
@@ -148,8 +175,17 @@ class Identifier:
         # unless this is switched off
         self.use_spin_labels = use_spin_labels
         if thermo == "auto":
-            from .thermo import default_model
+            from .thermo import LIBRARY_FILE, default_model
             thermo = default_model(exclude_models)
+            if thermo is None:
+                self.thermo_info = (f"thermo library not found ({LIBRARY_FILE}); thermochemistry not used. "
+                                    "Build it with: python -m rxnsolve build-thermo --models <RMG-models>")
+        if thermo is not None:
+            self.thermo_info = (f"thermo library of {thermo.n_records} records ({thermo.n_species} structures)"
+                                + (f", {', '.join(sorted(exclude_models))} left out" if exclude_models else "")
+                                + "; group additivity for structures not in it")
+        elif not hasattr(self, "thermo_info"):
+            self.thermo_info = "thermochemistry switched off"
         self.thermo = thermo
         self.known = known or {}
         self.use_names = use_names
@@ -228,6 +264,7 @@ class Identifier:
         n_known = sum(1 for s in self.species.values() if s.status == "known")
         self.say(f"{len(self.species)} species, {len(self.mech.reactions)} reactions, "
                  f"{n_known} given as known")
+        self.say(self.thermo_info)
 
     def _infer_missing_formulas(self) -> None:
         changed = True
@@ -499,13 +536,15 @@ class Identifier:
                 break
             proposals = []
             for st in open_species:
-                rxns = self.witness_reactions(st.name)
+                rxns = self._rank_witnesses(st.name, self.witness_reactions(st.name))[:IDENTIFY_REACTIONS]
+                big = sum(v for k, v in st.formula.items() if k != "H") > BIG_SPECIES_HEAVY
                 # per-species budget for this round; distances are cached on the
                 # candidates, so the next round continues where this one stopped
                 deadline = time.time() + IDENTIFY_SECONDS
                 if rxns:
-                    self.reaction_generated(st, rxns, deadline=deadline)
-                _, used = self.score_species(st, rxns, deadline=deadline)
+                    self.reaction_generated(st, rxns[:BIG_GEN_REACTIONS] if big else rxns, deadline=deadline)
+                _, used = self.score_species(st, rxns, max_candidates=BIG_CANDIDATES if big else 160,
+                                             deadline=deadline)
                 if len(used) < min(len(rxns), PARTIAL_MIN_REACTIONS):
                     continue      # too little evidence scored yet to decide this round
                 ranked = st.ranked()
@@ -551,16 +590,7 @@ class Identifier:
                 st.status = "identified"
                 st.confidence = post
                 st.round = rnd
-                if n_wit and ("formula" in top.sources or "reaction" in top.sources) and not top.log_name:
-                    st.method = f"reactions ({n_wit} witnesses)"
-                elif top.log_name and n_wit:
-                    st.method = f"name + reactions ({n_wit} witnesses)"
-                elif top.log_name:
-                    st.method = "name"
-                elif len(st.candidates) == 1:
-                    st.method = "only isomer of formula"
-                else:
-                    st.method = "chemical plausibility"
+                st.method = explain_decision(st, top, n_wit)
             self.say(f"round {rnd} (tau={tau:.2f}): identified "
                      + ", ".join(f"{p[3].name}={p[4].smiles}({p[0]:.2f})" for p in accept))
             if level > 0:
@@ -569,16 +599,17 @@ class Identifier:
         return self
 
     # ------------------------------------------------------------ audit
-    def _audit_reactions(self, name: str) -> list[Reaction]:
-        """Witness reactions for an audit, most informative and cheapest first."""
-        rxns = self.witness_reactions(name)
-
+    def _rank_witnesses(self, name: str, rxns: list[Reaction]) -> list[Reaction]:
+        """Elementary steps first (at most 2 species a side), then the smallest partners."""
         def heavy(r):
             return sum(self.mol_of(s).heavy_count() for s in r.species()
                        if s != name and self.mol_of(s) is not None)
 
-        rxns.sort(key=lambda r: (max(len(r.reactants), len(r.products)) > 2, heavy(r), r.index))
-        return rxns
+        return sorted(rxns, key=lambda r: (max(len(r.reactants), len(r.products)) > 2, heavy(r), r.index))
+
+    def _audit_reactions(self, name: str) -> list[Reaction]:
+        """Witness reactions for an audit, most informative and cheapest first."""
+        return self._rank_witnesses(name, self.witness_reactions(name))
 
     def audit(self, min_gap: float = 3.0, verbose: bool = False,
               seconds: float = AUDIT_SECONDS) -> list[dict]:
@@ -683,9 +714,11 @@ class Identifier:
                     st.confidence = audit_p
                     st.method = ("given; audit flags it" if verdict.startswith("FLAG")
                                  else f"given; audit P={audit_p:.2f}")
+                msg = (f"[audit {k}/{len(known)}] {st.name} {self.known.get(st.name, given.smiles)}: "
+                       f"{verdict} ({time.time() - t0:.1f} s)")
+                self.log.append(msg)
                 if verbose:
-                    print(f"[audit {k}/{len(known)}] {st.name} {self.known.get(st.name, given.smiles)}: {verdict} "
-                          f"({time.time() - t0:.1f} s)", flush=True)
+                    print(msg, flush=True)
         self.audit_findings = findings
         self.say(f"audit: {len(known)} species in {time.time() - t_all:.0f} s, "
                  f"{len(findings)} flagged, {len(self.audit_partial)} partially checked")

@@ -21,7 +21,8 @@ Pure Python 3.9+, standard library only. No RDKit, no RMG, no cluster.
 | Name hints | `names.py` | aliases (GRI/USC/Aramco/LLNL), condensed formulas (`CH3CH(OH)CH3`), LLNL patterns (`C7H14OOH2-4`, `NC7KET24`), N-/I-/S-/T- prefixes |
 | Thermo evidence | `thermo.py` | thermo library + Benson-style group additivity learned from `RMG-models` |
 | Identification | `identify.py` | iterative constraint propagation over the whole mechanism; audit of existing `SMILES.txt` |
-| Drawing / report | `draw.py`, `report.py` | SVG Lewis structures (lone-pair and radical dots, charges) and atom-mapped mechanisms with curly arrows, in one HTML file |
+| Drawing / report | `draw.py`, `report.py` | SVG Lewis structures (lone-pair and radical dots, charges) and atom-mapped mechanisms with curly arrows; a static report site with one evidence page per species |
+| Web app | `webapp.py`, `pipeline.py` | connect RMG-models, pick a mechanism, run identify/audit, browse the reports |
 
 ## Electron spin (singlet, doublet, triplet, ...)
 
@@ -87,12 +88,51 @@ connectivity.
 Run `python benchmarks/benchmark.py <model> --mode names|blind`. Current numbers are
 in `benchmarks/RESULTS.md`.
 
+## Web app
+
+```bash
+python -m rxnsolve serve --models ../RMG-models      # then open http://127.0.0.1:8770
+```
+
+The app lists every mechanism folder under the connected directory: the RMG-models
+layout with `import.sh`, or any folder with a CHEMKIN `*.inp`. You can connect a
+different folder from the page. Pick a mechanism, choose **Identify** or **Audit
+SMILES.txt, then identify the rest**, and press Run. Progress shows live. Each run
+writes a report site under `rxnsolve_runs/<model>/<time>-<mode>/`, and earlier
+runs stay listed. The server only listens on 127.0.0.1.
+
+Options:
+
+* **Use species names as hints**: off means blind mode.
+* **Start from the structures in SMILES.txt**: those structures are taken as given.
+* **Leave this mechanism out of the thermo library**: keep this on for an honest
+  test. Otherwise its own thermo matches itself.
+* **Use thermochemistry.**
+
+## The report
+
+Every run (CLI or app) writes a small static site:
+
+* `index.html`: summary numbers, the six-step identification process, audit flags
+  and a searchable species table. The "deciding evidence" column names what
+  separated the winner from the runner-up (e.g. `thermochemistry +8.3, name +1.5`).
+* `species/<id>.html`: one page per species, laid out as the argument for its
+  structure:
+  * the Lewis structure and electron counts (valence electrons, bonding pairs,
+    lone pairs, unpaired electrons, spin state, formal charges)
+  * then the numbered evidence chain: Formula → Candidates → Lewis structure →
+    Name → Thermochemistry → Reactions (bond edits for this structure vs. the
+    runner-up) → Decision (probability bars)
+  * the deciding reactions, solved with the atom map, curly arrows and spin check
+* `reactions.html`: every solved reaction, filterable by species, reaction class
+  and spin.
+
 ## Usage
 
 ```bash
 # identify every species (optionally seed with species you already know)
 python -m rxnsolve identify chem.inp -t therm.dat -k SMILES.txt -o out/
-#   -> out/report.html  out/SMILES.txt (RMG importer format)  out/identification.json
+#   -> out/index.html (report site)  out/SMILES.txt (RMG importer format)  out/identification.json
 
 # check an existing identification (e.g. an RMG-models SMILES.txt)
 python -m rxnsolve audit chem.inp -t therm.dat -k SMILES.txt -o audit/
@@ -148,5 +188,12 @@ python3 -m unittest discover -s tests -v
   are cached, so the next round continues where the last one stopped. A species
   that was cut off is only decided once at least 10 of its reactions have been
   scored.
+* Input: CHEMKIN gas-phase files. Thermo cards may be double-spaced, carry
+  comments after the card number, use the extended `&` layout, or live in a file
+  whose name differs from `import.sh`; a mechanism without a SPECIES block takes
+  its species from the reactions. Other formats (FlameMaster "Let allowed atoms
+  be…", surface/catalyst blocks) are reported as unreadable rather than run.
+  All 134 RMG-models folders were scanned: formulas are found for 57,147 of
+  57,240 species; the 4 unreadable models are of that kind.
 * Output prefixes `doublet`/`quartet` (e.g. `doublet[CH]`) are understood by
   rxnsolve. RMG's importer may only read `singlet`/`triplet`.

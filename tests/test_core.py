@@ -254,5 +254,50 @@ class TestSpin(unittest.TestCase):
         self.assertEqual(off.species["CH2(S)"].chosen.smiles, "[CH2]")  # label ignored
 
 
+class TestReportAndApp(unittest.TestCase):
+    def _mech_files(self, folder):
+        comps = {"S1": [("H", 1)], "S2": [("O", 2)], "S3": [("O", 1), ("H", 1)], "S4": [("O", 1)],
+                 "S5": [("H", 1), ("O", 1)], "S6": [("C", 1), ("H", 4)], "S7": [("C", 1), ("H", 3)],
+                 "S8": [("O", 1), ("H", 1)], "S9": [("C", 2), ("H", 6)], "AR": [("AR", 1)]}
+        thermo = "".join(_card(n, c) for n, c in comps.items())
+        chem = os.path.join(folder, "mechanism.txt")
+        with open(chem, "w") as fh:
+            fh.write(MECH.format(thermo=thermo))
+        with open(os.path.join(folder, "import.sh"), "w") as fh:
+            fh.write("python importChemkin.py --species mechanism.txt --reactions mechanism.txt "
+                     "--thermo mechanism.txt --known SMILES.txt\n")
+        with open(os.path.join(folder, "SMILES.txt"), "w") as fh:
+            fh.write("S6\tC\nS7\t[CH3]\n")
+        return chem
+
+    def test_report_site(self):
+        from rxnsolve.pipeline import run_pipeline
+        with tempfile.TemporaryDirectory() as d:
+            chem = self._mech_files(d)
+            out = os.path.join(d, "out")
+            res = run_pipeline(chem, out_dir=out, use_names=False, use_thermo=False)
+            for f in ("index.html", "reactions.html", "style.css", "SMILES.txt", "identification.json"):
+                self.assertTrue(os.path.exists(os.path.join(out, f)), f)
+            pages = os.listdir(os.path.join(out, "species"))
+            self.assertEqual(len(pages), 10)
+            with open(os.path.join(out, "species", next(p for p in pages if "S9" in p))) as fh:
+                page = fh.read()
+            for step in ("Formula", "Candidates", "Lewis structure", "Thermochemistry", "Reactions", "Decision"):
+                self.assertIn(f"<h3>{step}</h3>", page)
+            self.assertIn("<svg", page)
+            self.assertEqual(res["counts"].get("identified"), 10)
+
+    def test_app_discovers_models(self):
+        from rxnsolve.webapp import discover
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "ModelA"))
+            self._mech_files(os.path.join(d, "ModelA"))
+            os.makedirs(os.path.join(d, "Empty"))
+            models = discover(d)
+            self.assertEqual(list(models), ["ModelA"])
+            self.assertTrue(models["ModelA"]["known"].endswith("SMILES.txt"))
+            self.assertTrue(models["ModelA"]["chem"].endswith("mechanism.txt"))
+
+
 if __name__ == "__main__":
     unittest.main()
