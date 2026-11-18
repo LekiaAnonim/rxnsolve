@@ -114,12 +114,13 @@ def cmd_isomers(a):
 
 
 def cmd_build_thermo(a):
-    from .thermo import LIBRARY_FILE, ThermoModel, build_library, save_library
+    from .thermo import GA_FILE, LIBRARY_FILE, build_library, save_group_additivity, save_library
 
     lib = build_library(a.models, verbose=not a.quiet)
     save_library(lib)
-    ThermoModel(lib, verbose=True)
+    save_group_additivity(lib, verbose=True)
     print(f"{len(lib['records'])} records, {len(lib['features'])} structures -> {LIBRARY_FILE}")
+    print(f"group values -> {GA_FILE}")
 
 
 def main(argv=None):

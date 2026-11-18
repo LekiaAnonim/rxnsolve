@@ -299,5 +299,62 @@ class TestReportAndApp(unittest.TestCase):
             self.assertTrue(models["ModelA"]["chem"].endswith("mechanism.txt"))
 
 
+class TestThermoFallback(unittest.TestCase):
+    """What happens to thermochemistry when the thermo library is missing."""
+
+    def setUp(self):
+        import rxnsolve.thermo as T
+        self.T = T
+        self._load_library = T.load_library
+        self._ga_file = T.GA_FILE
+        T._DEFAULT.clear()
+
+    def tearDown(self):
+        self.T.load_library = self._load_library
+        self.T.GroupAdditivity.load.__func__.__defaults__ = (self._ga_file,)
+        self.T._DEFAULT.clear()
+
+    def test_group_additivity_without_library(self):
+        T = self.T
+        T.load_library = lambda path=None: None
+        model = T.default_model()
+        self.assertIsNotNone(model, "saved group values should keep group additivity working")
+        self.assertEqual(model.n_records, 0)
+        benzene, hexadiyne = S("c1ccccc1"), S("CC#CC#CC")
+        ll_b, dh_b, note = model.log_likelihood(benzene, benzene.constitution_key(), 19.8, 64.4)
+        self.assertIn("group additivity", note)
+        self.assertLess(dh_b, 10.0)                    # benzene: real +19.8 kcal/mol, GA within 10
+        ll_h, dh_h, _ = model.log_likelihood(hexadiyne, hexadiyne.constitution_key(), 19.8, 64.4)
+        self.assertGreater(ll_b, ll_h)                 # still separates aromatic from open chain
+
+    def test_identifier_reports_ga_only(self):
+        T = self.T
+        T.load_library = lambda path=None: None
+        mech = parse_chemkin_text("H2O", [("H", 2), ("O", 1)])
+        ident = Identifier(mech, {}, use_names=False)
+        self.assertIn("group additivity only", ident.thermo_info)
+
+    def test_nothing_available(self):
+        T = self.T
+        T.load_library = lambda path=None: None
+        T.GroupAdditivity.load.__func__.__defaults__ = ("/nonexistent/group_additivity.json",)
+        self.assertIsNone(T.default_model())
+        mech = parse_chemkin_text("H2O", [("H", 2), ("O", 1)])
+        ident = Identifier(mech, {}, use_names=False)
+        self.assertIn("not found", ident.thermo_info)
+
+
+def parse_chemkin_text(name, comp):
+    txt = (f"ELEMENTS H O C END\nSPECIES {name} END\nTHERMO ALL\n300.000  1000.000  5000.000\n"
+           + _card(name, comp) + "END\nREACTIONS\nEND\n")
+    with tempfile.NamedTemporaryFile("w", suffix=".inp", delete=False) as fh:
+        fh.write(txt)
+        path = fh.name
+    try:
+        return parse_chemkin(path)
+    finally:
+        os.unlink(path)
+
+
 if __name__ == "__main__":
     unittest.main()

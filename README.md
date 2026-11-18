@@ -68,6 +68,19 @@ log P(c | mechanism) = prior(c) + name(c) + thermo(c) + Σ_reactions −1.5 · w
 * **d_r(c):** the minimum number of σ bonds broken + formed to run reaction *r* with *S = c*, with every other species of *r* already resolved. Elementary steps need 1–3 edits.
 * **w_r:** 0.25 for lumped steps (3+ species on one side). It is halved again when no candidate explains the step in under 3 edits.
 
+What thermochemistry is available decides how it is used:
+
+| Available | Used |
+|---|---|
+| `data/thermo_library.json` (from `build-thermo`) | library votes, plus group additivity fitted on the library (refitted without the mechanism under test when it is left out) |
+| only `data/group_additivity.json` (715 saved group values) | group additivity alone; the report says "group additivity only" |
+| neither | no thermochemistry; the run log and report say so |
+
+USC Mech II blind scores 104 correct with the library, 89 with group additivity
+alone, and 64 with no thermochemistry. The saved group values were fitted on all
+of RMG-models, USC included, so 89 is somewhat optimistic. `build-thermo`
+rewrites both files.
+
 Candidates come from three places:
 
 * the formula (complete enumeration for small species)
@@ -177,6 +190,8 @@ python3 -m unittest discover -s tests -v
 * σ-edit counting favours very reactive structures (carbenes, ylides) in lumped
   reactions. Priors and the thermo term correct most of this, but lumped
   mechanisms give weaker evidence.
+* Group additivity overestimates aromatics by about 5–7 kcal/mol (benzene 26.9 vs
+  19.8). That is still more than 40 kcal/mol from the open-chain isomers.
 * The thermo library is only as good as the identifications it is built from.
   `audit` flags suspect entries. For example, `PCI2017/111-Jin` lists `pC3H4`
   (propyne) as `[CH]C=C`.

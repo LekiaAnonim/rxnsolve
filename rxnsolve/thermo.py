@@ -30,6 +30,8 @@ from .smiles import parse_smiles
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 LIBRARY_FILE = os.path.join(DATA_DIR, "thermo_library.json")
+# fitted group values, so group additivity still works when the library is missing
+GA_FILE = os.path.join(DATA_DIR, "group_additivity.json")
 
 
 # ====================================================================
@@ -251,6 +253,22 @@ class GroupAdditivity:
         self.w = weights or {}
         self.rms = rms
 
+    def save(self, path: str = GA_FILE, **meta) -> None:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as fh:
+            json.dump({"rms": round(self.rms, 4), **meta,
+                       "weights": {k: round(v, 6) for k, v in sorted(self.w.items())}}, fh, indent=0)
+
+    @classmethod
+    def load(cls, path: str = GA_FILE) -> "GroupAdditivity | None":
+        if not os.path.exists(path):
+            return None
+        with open(path) as fh:
+            d = json.load(fh)
+        ga = cls(d["weights"], d.get("rms", 4.0))
+        ga.meta = {k: v for k, v in d.items() if k != "weights"}
+        return ga
+
     def predict(self, mol: Molecule) -> float:
         return sum(self.w.get(k, 0.0) * v for k, v in group_features(mol).items())
 
@@ -307,8 +325,16 @@ class GroupAdditivity:
 class ThermoModel:
     """Library + group additivity, optionally excluding some models."""
 
-    def __init__(self, library: dict, exclude_models: set[str] | None = None, verbose=False):
+    def __init__(self, library: dict | None, exclude_models: set[str] | None = None, verbose=False,
+                 ga: "GroupAdditivity | None" = None):
         exclude_models = exclude_models or set()
+        if library is None:
+            # group additivity only: saved group values, no records to match
+            self.by_key, self._index, self._hs = defaultdict(list), defaultdict(list), {}
+            self.ga = ga
+            self.n_records = 0
+            self.n_species = (getattr(ga, "meta", {}) or {}).get("n_species", 0)
+            return
         recs = [r for r in library["records"] if r["model"] not in exclude_models
                 and not any(r["model"].startswith(e + os.sep) for e in exclude_models)]
         self.by_key: dict[str, list[tuple[float, float]]] = defaultdict(list)
@@ -329,6 +355,11 @@ class ThermoModel:
         for f in self._index:
             self._index[f].sort()
         self._hs = {f: [x[0] for x in v] for f, v in self._index.items()}
+        self.n_records = len(recs)
+        if ga is not None:
+            self.ga = ga
+            self.n_species = len(self.by_key)
+            return
         # one training sample per constitution: median H298
         cached = library.get("features", {})
         samples = []
@@ -344,7 +375,6 @@ class ThermoModel:
             samples.append((Counter(feats), h))
         self.ga = GroupAdditivity.fit(samples, verbose=verbose)
         self.n_species = len(samples)
-        self.n_records = len(recs)
 
     def library_match(self, key: str, h: float, s: float | None):
         vals = self.by_key.get(key)
@@ -414,13 +444,36 @@ def _robust(dh: float, sigma: float, eps: float = 0.005) -> float:
 _DEFAULT = {}
 
 
+def save_group_additivity(library: dict, path: str = GA_FILE, verbose: bool = False) -> ThermoModel:
+    """Fit group additivity on the whole library and store the group values."""
+    import time as _time
+    m = ThermoModel(library, verbose=verbose)
+    m.ga.save(path, n_species=m.n_species, n_records=m.n_records, built=_time.strftime("%Y-%m-%d"))
+    return m
+
+
 def default_model(exclude_models: set[str] | None = None, verbose=False) -> ThermoModel | None:
+    """Thermo evidence for a run.
+
+    library present           -> library votes + group additivity fitted on it
+                                 (refitted without ``exclude_models`` when given)
+    library missing, GA file  -> group additivity only, from the saved values
+    neither                   -> None: thermochemistry is not used
+    """
     key = tuple(sorted(exclude_models or ()))
     if key in _DEFAULT:
         return _DEFAULT[key]
     lib = load_library()
     if lib is None:
-        return None
-    m = ThermoModel(lib, set(exclude_models or ()), verbose=verbose)
+        ga = GroupAdditivity.load()
+        if ga is None:
+            return None
+        m = ThermoModel(None, ga=ga)
+    else:
+        saved = None if exclude_models else GroupAdditivity.load()
+        if saved is not None and saved.meta.get("n_records") == len(lib["records"]):
+            m = ThermoModel(lib, ga=saved)      # same library: reuse the saved fit
+        else:
+            m = ThermoModel(lib, set(exclude_models or ()), verbose=verbose)
     _DEFAULT[key] = m
     return m

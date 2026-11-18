@@ -180,7 +180,11 @@ class Identifier:
             if thermo is None:
                 self.thermo_info = (f"thermo library not found ({LIBRARY_FILE}); thermochemistry not used. "
                                     "Build it with: python -m rxnsolve build-thermo --models <RMG-models>")
-        if thermo is not None:
+        if thermo is not None and thermo.n_records == 0:
+            self.thermo_info = (f"no thermo library; group additivity only, from saved group values "
+                                f"(fitted on {thermo.n_species} structures"
+                                + (", which may include this mechanism" if exclude_models else "") + ")")
+        elif thermo is not None:
             self.thermo_info = (f"thermo library of {thermo.n_records} records ({thermo.n_species} structures)"
                                 + (f", {', '.join(sorted(exclude_models))} left out" if exclude_models else "")
                                 + "; group additivity for structures not in it")
